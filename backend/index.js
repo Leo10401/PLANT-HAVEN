@@ -7,6 +7,7 @@ const prodRouter = require('./routes/productRoutes');
 const sellerRouter = require('./routes/seller');
 const reviewRouter = require('./routes/reviewRoutes');
 const cartRouter = require('./routes/cartRoutes');
+const orderRouter = require('./routes/orderRoutes');
 
 
 
@@ -44,6 +45,7 @@ app.use('/prod', prodRouter);
 app.use('/seller', sellerRouter);
 app.use('/reviews', reviewRouter);
 app.use('/cart', cartRouter);
+app.use('/orders', orderRouter);
 
 app.get('/', (req, res) => {
     res.send('response from express');

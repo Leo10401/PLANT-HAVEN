@@ -26,7 +26,7 @@ import { Separator } from '@/components/ui/separator';
 export default function Checkout() {
   const router = useRouter();
   const { user, loading, isAuthenticated } = useAuth();
-  const { selectedItems, selectedItemsData, orderSummary, clearSelectedItems } = useSelectedItems();
+  const { selectedItems, selectedItemsData, orderSummary, clearSelectedItems, updateSelectedItems } = useSelectedItems();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     shipping: {
@@ -39,6 +39,53 @@ export default function Checkout() {
     },
     paymentMethod: 'creditCard'
   });
+  const [userId, setUserId] = useState(null);
+
+  // Get and store user ID on component mount
+  useEffect(() => {
+    // Attempt to get user ID from multiple sources
+    const extractUserId = () => {
+      // First try from user context
+      if (user) {
+        const id = user._id || user.id;
+        if (id) {
+          console.log('User ID found in context:', id);
+          setUserId(id);
+          return;
+        }
+      }
+
+      // Try from localStorage directly
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        console.log('User ID found in localStorage:', storedUserId);
+        setUserId(storedUserId);
+        return;
+      }
+
+      // Try from user object in localStorage
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          const id = parsedUser._id || parsedUser.id;
+          if (id) {
+            console.log('User ID found in localStorage user object:', id);
+            setUserId(id);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing user from localStorage:', error);
+      }
+
+      console.warn('No user ID found from any source');
+    };
+
+    if (!loading) {
+      extractUserId();
+    }
+  }, [user, loading]);
 
   useEffect(() => {
     // Redirect to cart if no items are selected
@@ -51,16 +98,19 @@ export default function Checkout() {
     // Wait until the authentication state is loaded
     if (loading) return;
     
-    // If user is not authenticated, redirect to login
-    if (!user && !loading) {
+    // Check if user is authenticated
+    const isUserAuthenticated = isAuthenticated() || !!localStorage.getItem('token');
+    
+    if (!isUserAuthenticated) {
       toast.error('Please login to checkout');
-      router.push('/identify');
+      router.push('/');
       return;
     }
     
-    // If user has shipping info, pre-fill the form
+    // Pre-fill shipping info if available
     if (user?.shipping) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         shipping: {
           address: user.shipping.address || '',
           city: user.shipping.city || '',
@@ -70,27 +120,33 @@ export default function Checkout() {
           phoneNumber: user.shipping.phoneNumber || ''
         },
         paymentMethod: user.paymentMethod || 'creditCard'
-      });
+      }));
+    } else {
+      // Try to get shipping info from localStorage
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser?.shipping) {
+            setFormData(prev => ({
+              ...prev,
+              shipping: {
+                address: parsedUser.shipping.address || '',
+                city: parsedUser.shipping.city || '',
+                state: parsedUser.shipping.state || '',
+                postalCode: parsedUser.shipping.postalCode || '',
+                country: parsedUser.shipping.country || '',
+                phoneNumber: parsedUser.shipping.phoneNumber || ''
+              },
+              paymentMethod: parsedUser.paymentMethod || 'creditCard'
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error getting shipping info from localStorage:', error);
+      }
     }
-  }, [user, loading, router, selectedItems]);
-
-  // For debugging
-  useEffect(() => {
-    console.log('Auth state:', { user, loading, isAuthenticated: isAuthenticated() });
-    
-    // Check if the user data is in localStorage even if not in context
-    try {
-      const storedUser = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
-      console.log('LocalStorage:', { 
-        hasStoredUser: !!storedUser, 
-        hasToken: !!token,
-        userData: storedUser ? JSON.parse(storedUser) : null
-      });
-    } catch (error) {
-      console.error('Error checking localStorage:', error);
-    }
-  }, [user, loading, isAuthenticated]);
+  }, [user, loading, isAuthenticated, router, selectedItems]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -116,28 +172,32 @@ export default function Checkout() {
     setIsLoading(true);
     
     try {
-      // If user data is not available in context, try to get from localStorage
-      let userId;
-      if (user) {
-        userId = user._id || user.id;
-      } else {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          userId = parsedUser._id || parsedUser.id;
-        }
-      }
-      
+      // Check if we have a userId
       if (!userId) {
-        throw new Error('User ID not found');
+        console.error('User ID not found. Current state:', {
+          contextUser: user,
+          hasToken: !!localStorage.getItem('token'),
+          hasLocalUser: !!localStorage.getItem('user')
+        });
+        toast.error('User authentication error. Please log in again.');
+        router.push('/');
+        return;
       }
       
-      // Use direct API call if context method fails
-      const token = localStorage.getItem('token');
+      console.log('Proceeding with user ID:', userId);
       
-      let result;
+      // Get token for API calls
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token missing. Please log in again.');
+        router.push('/');
+        return;
+      }
+      
+      // Update user shipping information
+      let userUpdateResult;
       try {
-        result = await fetch(`http://localhost:5000/user/update/${userId}`, {
+        userUpdateResult = await fetch(`http://localhost:5000/user/update/${userId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -146,21 +206,61 @@ export default function Checkout() {
           body: JSON.stringify(formData),
         });
         
-        const responseData = await result.json();
+        const userUpdateData = await userUpdateResult.json();
         
-        if (result.ok) {
-          // Mock create order (we'd normally send selected items to backend)
+        if (!userUpdateResult.ok) {
+          toast.error(userUpdateData.message || 'Failed to update user information');
+          throw new Error('Failed to update user information');
+        }
+      } catch (apiError) {
+        console.error('API error updating user:', apiError);
+        throw apiError;
+      }
+      
+      // Create the order
+      try {
+        // Prepare order items
+        const orderItems = selectedItemsData.map(item => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price * (1 - (item.product.discount || 0) / 100),
+          name: item.product.name,
+          image: item.product.image || "/placeholder.svg"
+        }));
+        
+        // Create order
+        const createOrderResult = await fetch('http://localhost:5000/orders/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            userId,
+            items: orderItems,
+            shippingAddress: formData.shipping,
+            paymentMethod: formData.paymentMethod,
+            totalAmount: orderSummary.total,
+            status: formData.paymentMethod === 'cashOnDelivery' ? 'pending' : 'processing'
+          }),
+        });
+        
+        const orderData = await createOrderResult.json();
+        
+        if (createOrderResult.ok) {
           toast.success('Order placed successfully!');
           
           // Clear selected items after successful checkout
           clearSelectedItems();
           
-          router.push('/user/all-orders');
+          // Redirect to order confirmation page with order ID
+          router.push(`/user/order-confirmation/${orderData.order._id}`);
         } else {
-          toast.error(responseData.message || 'Failed to place order');
+          toast.error(orderData.message || 'Failed to place order');
+          throw new Error('Failed to place order');
         }
       } catch (apiError) {
-        console.error('API error:', apiError);
+        console.error('API error creating order:', apiError);
         throw apiError;
       }
     } catch (error) {
@@ -198,6 +298,33 @@ export default function Checkout() {
           </Link>
 
           <div className="flex items-center gap-4">
+            {/* Show user info or login button */}
+            {userId ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 hidden md:inline">
+                  {user?.name || 'User'}
+                </span>
+                <button
+                  onClick={() => {
+                    // Clear all auth data
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('userId');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userRole');
+                    toast.success('Logged out successfully');
+                    router.push('/');
+                  }}
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link href="/" className="text-sm text-green-600 hover:text-green-800">
+                Login
+              </Link>
+            )}
+            
             <button className="p-2 rounded-full hover:bg-green-100 transition-colors">
               <Heart className="h-5 w-5 text-gray-600" />
             </button>
@@ -212,6 +339,29 @@ export default function Checkout() {
           </div>
         </div>
       </header>
+      
+      {/* Authentication Notice - shows if we detect issues */}
+      {(user === null && localStorage.getItem('token')) && (
+        <div className="bg-yellow-50 text-center py-2 border-b border-yellow-100">
+          <p className="text-sm text-yellow-800">
+            Authentication issues detected. Please try to 
+            <button 
+              onClick={() => {
+                // Clear all auth data
+                localStorage.removeItem('user');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('token');
+                localStorage.removeItem('userRole');
+                toast.success('Logged out successfully');
+                router.push('/');
+              }}
+              className="underline ml-1 font-medium"
+            >
+              logout and login again
+            </button>
+          </p>
+        </div>
+      )}
 
       {/* Breadcrumbs */}
       <div className="bg-white border-b border-green-100">
