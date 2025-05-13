@@ -90,7 +90,7 @@ router.get('/getbyemail/:email', (req, res) => {
 
 
 
-router.get('/getbyid/:id', (req, res) => {
+router.get('/getbyid/:id',verifyToken, (req, res) => {
     Model.findById(req.params.id)
         .then((result) => {
             res.status(200).json(result);
@@ -149,7 +149,7 @@ router.post('/authenticate', (req, res) => {
 
                             res.status(500).json({ message: 'Token Generation Failed' });
                         } else {
-                            res.status(200).json({ token: token, email, role });
+                            res.status(200).json({ token: token, email, role, _id });
                         }
                     }
                 )

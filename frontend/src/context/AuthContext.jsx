@@ -6,6 +6,28 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
+// Helper function to decode JWT token
+const decodeToken = (token) => {
+    try {
+        // Extract payload part of the token (middle part)
+        const base64Payload = token.split('.')[1];
+        // Decode and parse the payload
+        const payload = JSON.parse(atob(base64Payload));
+        return payload;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+    }
+};
+
+// Helper function to extract user ID from token or fallback methods
+const extractUserIdFromToken = (token) => {
+    if (!token) return null;
+    
+    const decodedToken = decodeToken(token);
+    return decodedToken?._id || null;
+};
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -25,24 +47,30 @@ export function AuthProvider({ children }) {
                 const token = localStorage.getItem('token');
                 const userRole = localStorage.getItem('userRole');
                 const storedUser = localStorage.getItem('user');
-                const userId = localStorage.getItem('userId');
                 
                 console.log('Auth init - stored data:', { 
                     hasToken: !!token, 
                     hasUserRole: !!userRole,
-                    hasStoredUser: !!storedUser,
-                    hasUserId: !!userId
+                    hasStoredUser: !!storedUser
                 });
                 
                 if (token) {
                     // Set default authorization header
                     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     
+                    // Try to extract user ID from token
+                    const userId = extractUserIdFromToken(token);
+                    
+                    if (userId) {
+                        // Store userId for redundancy
+                        localStorage.setItem('userId', userId);
+                    }
+                    
                     if (storedUser) {
                         try {
                             const parsedUser = JSON.parse(storedUser);
                             
-                            // Ensure user object has an ID
+                            // Ensure user object has an ID - use token payload if needed
                             if (!parsedUser._id && !parsedUser.id && userId) {
                                 parsedUser._id = userId;
                             }
@@ -50,17 +78,27 @@ export function AuthProvider({ children }) {
                             console.log('Setting user from localStorage:', { 
                                 hasId: !!parsedUser.id,
                                 hasUnderscoreId: !!parsedUser._id,
+                                userId,
                                 allUserProps: Object.keys(parsedUser)
                             });
                             
                             setUser(parsedUser);
                         } catch (parseError) {
                             console.error('Error parsing stored user:', parseError);
-                            logout();
+                            
+                            // If we can't parse the user object but have a token with ID,
+                            // create a minimal user object with the ID from token
+                            if (userId) {
+                                const minimalUser = { _id: userId };
+                                setUser(minimalUser);
+                                localStorage.setItem('user', JSON.stringify(minimalUser));
+                            } else {
+                                logout();
+                            }
                         }
                     } else if (userId) {
-                        // If we have a userId but no user object, create a minimal user object
-                        console.log('Creating minimal user object with ID:', userId);
+                        // If we have a userId from token but no user object, create a minimal user object
+                        console.log('Creating minimal user object with ID from token:', userId);
                         const minimalUser = { _id: userId };
                         setUser(minimalUser);
                         localStorage.setItem('user', JSON.stringify(minimalUser));
@@ -86,20 +124,27 @@ export function AuthProvider({ children }) {
                 throw new Error('No data received from server');
             }
 
-            const { token, user: userData, seller, email, role: userRole, id, _id } = response.data;
+            const { token, user: userData, seller, email, role: userRole, _id } = response.data;
             
             if (!token) {
                 throw new Error('No token received from server');
             }
 
-            // Extract the user ID from the response
-            const userId = _id || id || (userData && (userData._id || userData.id)) || 
-                          (seller && (seller._id || seller.id));
-                          
+            // Get user ID from response first, then fall back to token payload
+            let userId = _id;
+            
+            // If userId not in response, try to extract from token
             if (!userId) {
-                console.warn('No user ID found in login response:', response.data);
+                userId = extractUserIdFromToken(token);
+                console.log('User ID extracted from token:', userId);
             } else {
-                // Store userId separately for redundancy
+                console.log('User ID found in response:', userId);
+            }
+            
+            if (!userId) {
+                console.warn('No user ID found in response or token payload');
+            } else {
+                // Store userId
                 localStorage.setItem('userId', userId);
             }
 
@@ -124,8 +169,8 @@ export function AuthProvider({ children }) {
                 userInfo = userData || { email, role: userRole };
             }
             
-            // Ensure user object has an ID
-            if (!userInfo._id && !userInfo.id && userId) {
+            // Add ID to user info if not present
+            if (!userInfo._id && userId) {
                 userInfo._id = userId;
             }
             

@@ -61,9 +61,9 @@ export default function SellerOrders() {
   useEffect(() => {
     if (loading) return;
 
-    // Redirect if not authenticated or not a seller
-    if (!user || !user.isSeller) {
-      toast.error('Access denied. Seller account required.');
+    // Check if user is authenticated and is a seller
+    if (!user) {
+      toast.error('Please login to view your seller orders');
       router.push('/identify');
       return;
     }
@@ -76,7 +76,18 @@ export default function SellerOrders() {
       setIsLoading(true);
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:5000/orders/seller/${user._id}`, {
+      // Get userId from different sources
+      const userId = user?._id || localStorage.getItem('userId');
+      
+      if (!userId) {
+        toast.error('Seller ID not found. Please log in again');
+        router.push('/identify');
+        return;
+      }
+      
+      console.log('Fetching seller orders for:', userId);
+      
+      const response = await fetch(`http://localhost:5000/orders/seller/${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -88,8 +99,13 @@ export default function SellerOrders() {
 
       if (response.ok) {
         setOrders(data.orders);
+        console.log(`Retrieved ${data.orders?.length || 0} seller orders`);
       } else {
         toast.error(data.message || 'Failed to load orders');
+        
+        if (response.status === 401 || response.status === 403) {
+          router.push('/identify');
+        }
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -223,11 +239,14 @@ export default function SellerOrders() {
             <Link href="/seller/dashboard" className="text-sm text-gray-600 hover:text-green-600 transition-colors">
               Dashboard
             </Link>
-            <Link href="/seller/products" className="text-sm text-gray-600 hover:text-green-600 transition-colors">
+            <Link href="/seller/manage-products" className="text-sm text-gray-600 hover:text-green-600 transition-colors">
               Products
             </Link>
             <Link href="/seller/orders" className="text-sm font-medium text-green-600">
               Orders
+            </Link>
+            <Link href="/seller/product-orders" className="text-sm text-gray-600 hover:text-green-600 transition-colors">
+              Product Orders
             </Link>
           </div>
         </div>

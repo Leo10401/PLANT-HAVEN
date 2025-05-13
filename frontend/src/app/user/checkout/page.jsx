@@ -253,8 +253,27 @@ export default function Checkout() {
           // Clear selected items after successful checkout
           clearSelectedItems();
           
-          // Redirect to order confirmation page with order ID
-          router.push(`/user/order-confirmation/${orderData.order._id}`);
+          // Debug logs
+          console.log('Order created successfully, redirecting to confirmation page');
+          console.log('Order ID:', orderData.order._id);
+          console.log('Redirect URL:', `/user/order-confirmation/${orderData.order._id}`);
+          
+          try {
+            // Try router.replace first (more reliable for dynamic route params)
+            router.replace(`/user/order-confirmation/${orderData.order._id}`);
+            
+            // Set a fallback manual redirect after a short delay if router navigation fails
+            setTimeout(() => {
+              if (window.location.pathname !== `/user/order-confirmation/${orderData.order._id}`) {
+                console.log('Fallback redirect triggered');
+                window.location.href = `/user/order-confirmation/${orderData.order._id}`;
+              }
+            }, 1000);
+          } catch (navError) {
+            console.error('Navigation error:', navError);
+            // Fallback to manual redirect
+            window.location.href = `/user/order-confirmation/${orderData.order._id}`;
+          }
         } else {
           toast.error(orderData.message || 'Failed to place order');
           throw new Error('Failed to place order');

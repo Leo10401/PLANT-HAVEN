@@ -104,9 +104,9 @@ router.delete('/items/:productId', auth, async (req, res) => {
 });
 
 // Clear cart
-router.delete('/', async (req, res) => {
+router.delete('/', auth, async (req, res) => {
     try {
-        const cart = await Cart.findOne({ cart: req.cart.id });
+        const cart = await Cart.findOne({ user: req.user.id });
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found' });
         }

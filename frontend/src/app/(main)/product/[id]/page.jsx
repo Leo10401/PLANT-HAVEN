@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { toast } from "react-hot-toast"
 import {
   Leaf,
@@ -33,12 +33,15 @@ import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { getProduct, getProductReviews, addReview, markReviewHelpful, addToCart } from "@/services/api"
 import { useAuth } from "@/context/AuthContext"
+import React from "react"
 
-export default function ProductDetailPage() {
-  const params = useParams()
+export default function ProductDetailPage({ params }) {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
-  const productId = params.id
+  
+  // Get productId using React.use() as recommended by Next.js
+  const resolvedParams = React.use(params);
+  const productId = resolvedParams.id;
 
   // State for the product page
   const [product, setProduct] = useState(null)

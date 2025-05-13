@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -27,7 +27,13 @@ export default function OrderConfirmation({ params }) {
   const { user, loading } = useAuth();
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { orderId } = params;
+  
+  // Get orderId using React.use() as recommended by Next.js
+  const resolvedParams = React.use(params);
+  const orderId = resolvedParams.orderId;
+  
+  // Debug log
+  console.log('Order confirmation page loaded with orderId:', orderId);
 
   useEffect(() => {
     if (loading) return;
@@ -42,6 +48,7 @@ export default function OrderConfirmation({ params }) {
     const fetchOrderDetails = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log('Fetching order details for ID:', orderId);
 
         const response = await fetch(`http://localhost:5000/orders/${orderId}`, {
           method: 'GET',
@@ -52,6 +59,7 @@ export default function OrderConfirmation({ params }) {
         });
 
         const data = await response.json();
+        console.log('Order API response:', data);
 
         if (response.ok) {
           setOrder(data.order);
@@ -118,6 +126,13 @@ export default function OrderConfirmation({ params }) {
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
   };
 
   return (
@@ -255,7 +270,7 @@ export default function OrderConfirmation({ params }) {
                 {/* Price */}
                 <div className="text-right">
                   <p className="font-medium text-green-600">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    {formatCurrency(item.price * item.quantity)}
                   </p>
                 </div>
               </div>
@@ -269,7 +284,7 @@ export default function OrderConfirmation({ params }) {
             <div className="space-y-2">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>${order.totalAmount.toFixed(2)}</span>
+                <span>{formatCurrency(order.totalAmount)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
@@ -278,7 +293,7 @@ export default function OrderConfirmation({ params }) {
               <Separator className="my-2" />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span>${order.totalAmount.toFixed(2)}</span>
+                <span>{formatCurrency(order.totalAmount)}</span>
               </div>
             </div>
           </div>

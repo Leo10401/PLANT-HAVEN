@@ -10,10 +10,15 @@ const { sendOrderNotification } = require('../utils/emailService');
 router.post('/create', verifyToken, async (req, res) => {
   try {
     const { userId, items, shippingAddress, paymentMethod, totalAmount, status } = req.body;
-
+    
+    console.log('Creating order for userId:', userId);
+    
+    // Ensure userId is properly formatted (use the verified user's ID if possible)
+    const verifiedUserId = req.user._id || userId;
+    
     // Create new order
     const newOrder = new Order({
-      userId,
+      userId: verifiedUserId,
       items,
       shippingAddress,
       paymentMethod,
@@ -29,6 +34,9 @@ router.post('/create', verifyToken, async (req, res) => {
 
     // Save the order
     const savedOrder = await newOrder.save();
+    
+    console.log('Order saved successfully, order ID:', savedOrder._id);
+    console.log('Order userId stored as:', savedOrder.userId);
 
     // Track sellers to notify (to avoid duplicate notifications)
     const notifiedSellers = new Set();
@@ -90,11 +98,80 @@ router.post('/create', verifyToken, async (req, res) => {
   }
 });
 
+// Get all orders (debugging route)
+router.get('/getall', verifyToken, async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+    
+    console.log(`Retrieved all ${orders.length} orders for debugging`);
+    
+    // Log userId formats for debugging
+    if (orders.length > 0) {
+      console.log('Sample order userId format:', {
+        userId: orders[0].userId,
+        type: typeof orders[0].userId,
+        asString: orders[0].userId.toString()
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      orders
+    });
+  } catch (error) {
+    console.error('Error fetching all orders:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch all orders',
+      error: error.message
+    });
+  }
+});
+
 // Get all orders for a user
 router.get('/user/:userId', verifyToken, async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.params.userId })
-      .sort({ createdAt: -1 });
+    const userId = req.params.userId;
+    
+    console.log('Fetching orders for userId:', userId);
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required'
+      });
+    }
+    
+    // Convert string ID to ObjectId if needed
+    let query = { userId };
+    
+    // Also try to find orders where userId as string matches
+    const orders = await Order.find(query).sort({ createdAt: -1 });
+    
+    console.log(`Found ${orders.length} orders for user ${userId}`);
+    
+    // If no orders found, try another query approach
+    if (orders.length === 0) {
+      // Try with looser comparison (useful for debugging)
+      const allOrders = await Order.find().sort({ createdAt: -1 });
+      const matchingOrders = allOrders.filter(order => {
+        const orderUserId = order.userId.toString();
+        const paramUserId = userId.toString();
+        const isMatch = orderUserId === paramUserId;
+        console.log(`Comparing: ${orderUserId} with ${paramUserId}, match: ${isMatch}`);
+        return isMatch;
+      });
+      
+      console.log(`Found ${matchingOrders.length} orders after loose comparison`);
+      
+      if (matchingOrders.length > 0) {
+        return res.status(200).json({
+          success: true,
+          orders: matchingOrders,
+          message: 'Orders found with loose comparison'
+        });
+      }
+    }
     
     res.status(200).json({
       success: true,
@@ -113,6 +190,8 @@ router.get('/user/:userId', verifyToken, async (req, res) => {
 // Get orders for a seller
 router.get('/seller/:sellerId', verifyToken, async (req, res) => {
   try {
+    console.log(req.params.sellerId);
+    
     // Find products owned by this seller
     const products = await Product.find({ seller: req.params.sellerId });
     const productIds = products.map(product => product._id);
@@ -139,8 +218,8 @@ router.get('/seller/:sellerId', verifyToken, async (req, res) => {
 // Get specific order details
 router.get('/:orderId', verifyToken, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId)
-      .populate('userId', 'name email');
+    // Fetch order without attempting to populate userId
+    const order = await Order.findById(req.params.orderId);
     
     if (!order) {
       return res.status(404).json({
