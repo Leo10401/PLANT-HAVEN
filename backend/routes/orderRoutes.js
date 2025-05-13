@@ -190,17 +190,42 @@ router.get('/user/:userId', verifyToken, async (req, res) => {
 // Get orders for a seller
 router.get('/seller/:sellerId', verifyToken, async (req, res) => {
   try {
-    console.log(req.params.sellerId);
+    const requestedSellerId = req.params.sellerId;
+    const authenticatedUserId = req.user.id || req.user._id;
+    
+    console.log("Requested seller ID:", requestedSellerId);
+    console.log("Authenticated user ID:", authenticatedUserId);
+    
+    // Security check: ensure seller can only access their own orders
+    if (requestedSellerId !== authenticatedUserId.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only access your own orders',
+        requestedId: requestedSellerId,
+        yourId: authenticatedUserId.toString()
+      });
+    }
     
     // Find products owned by this seller
-    const products = await Product.find({ seller: req.params.sellerId });
+    const products = await Product.find({ seller: requestedSellerId });
+    
+    if (products.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No products found for this seller',
+        orders: []
+      });
+    }
+    
     const productIds = products.map(product => product._id);
+    console.log(`Found ${products.length} products for seller ${requestedSellerId}`);
     
     // Find orders containing these products
     const orders = await Order.find({
       'items.productId': { $in: productIds }
     }).sort({ createdAt: -1 });
-    console.log(orders);
+    
+    console.log(`Found ${orders.length} orders for seller ${requestedSellerId}`);
     
     res.status(200).json({
       success: true,
@@ -247,19 +272,55 @@ router.get('/:orderId', verifyToken, async (req, res) => {
 router.patch('/update-status/:orderId', verifyToken, async (req, res) => {
   try {
     const { status } = req.body;
+    const sellerId = req.user.id || req.user._id;
+    
+    // Find the order
+    const order = await Order.findById(req.params.orderId);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+    
+    // Get products owned by this seller
+    const sellerProducts = await Product.find({ seller: sellerId });
+    
+    if (sellerProducts.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'You have no products as a seller'
+      });
+    }
+    
+    // Convert product IDs to strings for comparison
+    const sellerProductIds = sellerProducts.map(p => p._id.toString());
+    
+    // Check if order contains at least one product from this seller
+    const orderItemProducts = order.items.map(item => item.productId.toString());
+    
+    console.log('Seller products:', sellerProductIds);
+    console.log('Order products:', orderItemProducts);
+    
+    const hasSellerProduct = order.items.some(item => 
+      sellerProductIds.includes(item.productId.toString())
+    );
+    
+    if (!hasSellerProduct) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only update orders containing your products',
+        yourProducts: sellerProductIds,
+        orderProducts: orderItemProducts
+      });
+    }
     
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.orderId,
       { status },
       { new: true }
     );
-    
-    if (!updatedOrder) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
     
     res.status(200).json({
       success: true,
@@ -279,6 +340,43 @@ router.patch('/update-status/:orderId', verifyToken, async (req, res) => {
 // Mark order as paid (for COD orders)
 router.patch('/mark-paid/:orderId', verifyToken, async (req, res) => {
   try {
+    const sellerId = req.user.id || req.user._id;
+    
+    // Find the order
+    const order = await Order.findById(req.params.orderId);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+    
+    // Get products owned by this seller
+    const sellerProducts = await Product.find({ seller: sellerId });
+    
+    if (sellerProducts.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'You have no products as a seller'
+      });
+    }
+    
+    // Convert product IDs to strings for comparison
+    const sellerProductIds = sellerProducts.map(p => p._id.toString());
+    
+    // Check if order contains at least one product from this seller
+    const hasSellerProduct = order.items.some(item => 
+      sellerProductIds.includes(item.productId.toString())
+    );
+    
+    if (!hasSellerProduct) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only update orders containing your products'
+      });
+    }
+    
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.orderId,
       { 
@@ -287,13 +385,6 @@ router.patch('/mark-paid/:orderId', verifyToken, async (req, res) => {
       },
       { new: true }
     );
-    
-    if (!updatedOrder) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
     
     res.status(200).json({
       success: true,
@@ -313,6 +404,43 @@ router.patch('/mark-paid/:orderId', verifyToken, async (req, res) => {
 // Mark order as delivered
 router.patch('/mark-delivered/:orderId', verifyToken, async (req, res) => {
   try {
+    const sellerId = req.user.id || req.user._id;
+    
+    // Find the order
+    const order = await Order.findById(req.params.orderId);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+    
+    // Get products owned by this seller
+    const sellerProducts = await Product.find({ seller: sellerId });
+    
+    if (sellerProducts.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'You have no products as a seller'
+      });
+    }
+    
+    // Convert product IDs to strings for comparison
+    const sellerProductIds = sellerProducts.map(p => p._id.toString());
+    
+    // Check if order contains at least one product from this seller
+    const hasSellerProduct = order.items.some(item => 
+      sellerProductIds.includes(item.productId.toString())
+    );
+    
+    if (!hasSellerProduct) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only update orders containing your products'
+      });
+    }
+    
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.orderId,
       { 
@@ -322,13 +450,6 @@ router.patch('/mark-delivered/:orderId', verifyToken, async (req, res) => {
       },
       { new: true }
     );
-    
-    if (!updatedOrder) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-    }
     
     res.status(200).json({
       success: true,
@@ -348,6 +469,9 @@ router.patch('/mark-delivered/:orderId', verifyToken, async (req, res) => {
 // Cancel order
 router.patch('/cancel/:orderId', verifyToken, async (req, res) => {
   try {
+    const sellerId = req.user.id;
+    
+    // Find the order
     const order = await Order.findById(req.params.orderId);
     
     if (!order) {
@@ -355,6 +479,25 @@ router.patch('/cancel/:orderId', verifyToken, async (req, res) => {
         success: false,
         message: 'Order not found'
       });
+    }
+    
+    // For sellers - verify they have products in this order
+    if (req.user.role === 'seller') {
+      // Get products owned by this seller
+      const sellerProducts = await Product.find({ seller: sellerId });
+      const sellerProductIds = sellerProducts.map(p => p._id.toString());
+      
+      // Check if order contains at least one product from this seller
+      const hasSellerProduct = order.items.some(item => 
+        sellerProductIds.includes(item.productId.toString())
+      );
+      
+      if (!hasSellerProduct) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only cancel orders containing your products'
+        });
+      }
     }
     
     // Only allow cancellation if order is pending or processing

@@ -122,8 +122,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/getall', (req, res) => {
-
-    Model.find()
+    Seller.find()
         .then((result) => {
             res.status(200).json(result);
         }).catch((err) => {
@@ -134,10 +133,9 @@ router.get('/getall', (req, res) => {
 
 // : denotes url parameter
 router.get('/getbyemail/:email', (req, res) => {
-
     console.log(req.params.email);
 
-    Model.findOne({ email: req.params.email })
+    Seller.findOne({ email: req.params.email })
         .then((result) => {
             if (result) {
                 res.status(200).json(result);
@@ -150,10 +148,8 @@ router.get('/getbyemail/:email', (req, res) => {
         });
 });
 
-
-
 router.get('/getbyid/:id', (req, res) => {
-    Model.findById(req.params.id)
+    Seller.findById(req.params.id)
         .then((result) => {
             res.status(200).json(result);
         }).catch((err) => {
@@ -163,7 +159,7 @@ router.get('/getbyid/:id', (req, res) => {
 });
 
 router.put('/update/:id', (req, res) => {
-    Model.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    Seller.findByIdAndUpdate(req.params.id, req.body, { new: true })
         .then((result) => {
             res.status(200).json(result);
         }).catch((err) => {
@@ -173,7 +169,7 @@ router.put('/update/:id', (req, res) => {
 });
 
 router.delete('/delete/:id', (req, res) => {
-    Model.findByIdAndDelete(req.params.id)
+    Seller.findByIdAndDelete(req.params.id)
         .then((result) => {
             res.status(200).json(result);
         }).catch((err) => {
@@ -183,8 +179,11 @@ router.delete('/delete/:id', (req, res) => {
 });
 
 router.get('/getbyuser', auth, (req, res) => {
-    Model.findById(req.user._id)
+    Seller.findById(req.user.id)
         .then((result) => {
+            if (!result) {
+                return res.status(404).json({ message: 'Seller not found' });
+            }
             res.status(200).json(result);
         }).catch((err) => {
             console.log(err);

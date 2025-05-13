@@ -3,11 +3,20 @@ const router = express.Router();
 const Product = require('../models/productModel');
 const auth = require('../middleware/auth');
 const multer = require('multer');
+const jwt = require('jsonwebtoken');
 
-// Get all products
+// Get all products (with optional seller filter)
 router.get('/', async (req, res) => {
     try {
-        const products = await Product.find().populate('seller', 'name shopName');
+        const { sellerId } = req.query;
+        let query = {};
+        
+        // If sellerId is provided, filter products by seller
+        if (sellerId) {
+            query.seller = sellerId;
+        }
+        
+        const products = await Product.find(query).populate('seller', 'name shopName');
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -83,13 +92,40 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
-// Get single product
+// Get single product - with owner check for seller context
 router.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id).populate('seller', 'name shopName');
         
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // Check if request has a token (seller context)
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        if (token) {
+            try {
+                // Verify token
+                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+                
+                // If user is a seller and not the owner of this product
+                const tokenSellerId = decoded.id || decoded._id;
+                const productSellerId = product.seller._id.toString();
+                
+                console.log('Token seller ID:', tokenSellerId);
+                console.log('Product seller ID:', productSellerId);
+                
+                if (decoded.role === 'seller' && tokenSellerId !== productSellerId) {
+                    console.log(`Access denied: Seller ${tokenSellerId} trying to access product owned by ${productSellerId}`);
+                    return res.status(403).json({ 
+                        message: 'Access denied. You can only view your own products in seller context.' 
+                    });
+                }
+            } catch (error) {
+                // Invalid token, but we'll still return the product since this endpoint is public
+                // Just log the attempt
+                console.log('Invalid token in product get request:', error.message);
+            }
         }
 
         res.json(product);

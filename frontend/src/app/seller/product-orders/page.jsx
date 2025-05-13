@@ -84,7 +84,7 @@ export default function SellerProductOrders() {
       const token = localStorage.getItem('token');
       
       // Get userId from different sources
-      const userId = user?._id || localStorage.getItem('userId');
+      const userId = user?.id || localStorage.getItem('userId');
       
       if (!userId) {
         toast.error('Seller ID not found. Please log in again');
@@ -92,7 +92,7 @@ export default function SellerProductOrders() {
         return;
       }
       
-      const response = await fetch(`http://localhost:5000/products/seller`, {
+      const response = await fetch(`http://localhost:5000/prod/seller`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export default function SellerProductOrders() {
       const token = localStorage.getItem('token');
       
       // Get userId from different sources
-      const userId = user?._id || localStorage.getItem('userId');
+      const userId = user?.id || localStorage.getItem('userId');
       
       if (!userId) {
         toast.error('Seller ID not found. Please log in again');

@@ -21,15 +21,32 @@ const verifyToken = (req, res, next) => {
         return res.status(403).json({ message: 'No token provided' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, payload) => {
         if(err){
             console.log('Token verification error:', err);
             res.status(403).json({ message: 'Invalid token' });
         } else {
-            // Set both user and user.id for compatibility
+            // Set user data from payload
             req.user = payload;
-            req.user.id = payload._id;
-            console.log('Token verified successfully, user ID:', payload._id);
+            
+            // Handle both id and _id fields for backwards compatibility
+            // Make sure both are always available
+            if (payload.id && !payload._id) {
+                req.user._id = payload.id;
+            } else if (payload._id && !payload.id) {
+                req.user.id = payload._id;
+            }
+            
+            // Convert to string for consistent comparison
+            if (req.user.id) req.user.id = req.user.id.toString();
+            if (req.user._id) req.user._id = req.user._id.toString();
+            
+            console.log('Token verified successfully:', { 
+                id: req.user.id,
+                _id: req.user._id,
+                role: req.user.role
+            });
+            
             next();
         }
     });
