@@ -200,6 +200,7 @@ router.get('/seller/:sellerId', verifyToken, async (req, res) => {
     const orders = await Order.find({
       'items.productId': { $in: productIds }
     }).sort({ createdAt: -1 });
+    console.log(orders);
     
     res.status(200).json({
       success: true,

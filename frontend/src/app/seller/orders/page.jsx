@@ -77,7 +77,7 @@ export default function SellerOrders() {
       const token = localStorage.getItem('token');
       
       // Get userId from different sources
-      const userId = user?._id || localStorage.getItem('userId');
+      const userId = user?.id || localStorage.getItem('userId');
       
       if (!userId) {
         toast.error('Seller ID not found. Please log in again');
