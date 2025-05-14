@@ -9,6 +9,7 @@ const reviewRouter = require('./routes/reviewRoutes');
 const cartRouter = require('./routes/cartRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const razorpayRouter = require('./routes/razorpay');
+const adminRouter = require('./routes/adminRoutes');
 
 
 
@@ -48,6 +49,7 @@ app.use('/reviews', reviewRouter);
 app.use('/cart', cartRouter);
 app.use('/orders', orderRouter);
 app.use('/razorpay', razorpayRouter);
+app.use('/admin', adminRouter);
 
 app.get('/', (req, res) => {
     res.send('response from express');

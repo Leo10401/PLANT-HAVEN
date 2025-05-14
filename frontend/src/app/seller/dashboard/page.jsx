@@ -99,7 +99,7 @@ export default function SellerDashboard() {
       const token = localStorage.getItem("token")
       if (!token) {
         toast.error("Authentication required. Please log in.")
-        router.push("/seller/login")
+        router.push("/identify")
         return
       }
       
@@ -191,7 +191,7 @@ export default function SellerDashboard() {
         if (apiError.response?.status === 401) {
           toast.error("Session expired. Please log in again.")
           localStorage.removeItem("token")
-          router.push("/seller/login")
+          router.push("/identify")
         } else if (apiError.response?.status === 404) {
           toast.error("Seller account not found.")
         } else {
@@ -285,7 +285,7 @@ export default function SellerDashboard() {
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("token")
-    router.push("/seller/login")
+    router.push("/identify")
   }
 
   // Update product stock
@@ -296,7 +296,7 @@ export default function SellerDashboard() {
       // Get token from localStorage
       const token = localStorage.getItem("token")
       if (!token) {
-        router.push("/seller/login")
+        router.push("/identify")
         return
       }
       

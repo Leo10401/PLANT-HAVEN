@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Review = require('../models/reviewModel');
-const auth = require('../middleware/auth');
+const userAuth = require('../middleware/userAuth');
 
 // Get reviews for a product
 router.get('/product/:productId', async (req, res) => {
@@ -16,7 +16,7 @@ router.get('/product/:productId', async (req, res) => {
 });
 
 // Add a review
-router.post('/', auth, async (req, res) => {
+router.post('/', userAuth, async (req, res) => {
     try {
         const review = new Review({
             ...req.body,
@@ -30,7 +30,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Update a review
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', userAuth, async (req, res) => {
     try {
         const review = await Review.findOne({ _id: req.params.id, user: req.user.id });
         if (!review) {
@@ -45,7 +45,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // Delete a review
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', userAuth, async (req, res) => {
     try {
         const review = await Review.findOne({ _id: req.params.id, user: req.user.id });
         if (!review) {
@@ -59,7 +59,7 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Mark review as helpful
-router.post('/:id/helpful', auth, async (req, res) => {
+router.post('/:id/helpful', userAuth, async (req, res) => {
     try {
         const review = await Review.findById(req.params.id);
         if (!review) {
