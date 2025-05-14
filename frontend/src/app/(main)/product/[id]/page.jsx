@@ -35,10 +35,11 @@ import { getProduct, getProductReviews, addReview, markReviewHelpful, addToCart 
 import { useAuth } from "@/context/AuthContext"
 import React from "react"
 import { CartIcon } from "@/components/ui/CartIcon"
+import WriteReviewForm from "@/components/WriteReviewForm"
 
 export default function ProductDetailPage({ params }) {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   
   // Get productId using React.use() as recommended by Next.js
   const resolvedParams = React.use(params);
@@ -54,6 +55,7 @@ export default function ProductDetailPage({ params }) {
   const [activeTab, setActiveTab] = useState("description")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [canReview, setCanReview] = useState(false)
 
   // Fetch product and reviews data
   useEffect(() => {
@@ -76,6 +78,57 @@ export default function ProductDetailPage({ params }) {
 
     fetchData()
   }, [productId])
+
+  // Check if user can review this product
+  useEffect(() => {
+    const checkIfCanReview = async () => {
+      if (!isAuthenticated() || !user || !productId) return;
+      
+      try {
+        // Fetch user's orders to check if they've purchased this product
+        const response = await fetch(`http://localhost:5000/orders/user/${user._id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message || 'Failed to fetch orders');
+        
+        // Check if user has ordered this product and it was delivered
+        const hasOrderedAndDelivered = data.orders.some(order => 
+          order.status === 'delivered' && 
+          order.items.some(item => item.productId === productId)
+        );
+        
+        // Check if user has already reviewed this product
+        const hasAlreadyReviewed = reviews.some(review => 
+          review.user && review.user._id === user._id
+        );
+        
+        setCanReview(hasOrderedAndDelivered && !hasAlreadyReviewed);
+      } catch (error) {
+        console.error('Error checking review eligibility:', error);
+      }
+    };
+    
+    checkIfCanReview();
+  }, [isAuthenticated, user, productId, reviews]);
+
+  // Handle review form submission success
+  const handleReviewSuccess = async () => {
+    // Refresh reviews
+    try {
+      const reviewsData = await getProductReviews(productId);
+      setReviews(reviewsData);
+      setCanReview(false); // User can't review anymore after submitting
+      setActiveTab("reviews"); // Switch to reviews tab
+    } catch (err) {
+      console.error('Error refreshing reviews:', err);
+    }
+  };
 
   // Handle quantity change
   const decreaseQuantity = () => {
@@ -716,76 +769,108 @@ export default function ProductDetailPage({ params }) {
                     </div>
                   </div>
 
+                  {/* Write a Review */}
+                  {isAuthenticated() ? (
+                    canReview ? (
+                      <div className="mb-8">
+                        <WriteReviewForm 
+                          productId={productId} 
+                          onSuccess={handleReviewSuccess} 
+                        />
+                      </div>
+                    ) : (
+                      user && (
+                        <div className="bg-gray-50 p-4 rounded-lg mb-8">
+                          <p className="text-gray-600 text-sm">
+                            {reviews.some(review => review.user && review.user._id === user._id) 
+                              ? "You've already reviewed this product. Thank you for your feedback!"
+                              : "You need to purchase and receive this product before you can review it."}
+                          </p>
+                        </div>
+                      )
+                    )
+                  ) : (
+                    <div className="bg-gray-50 p-4 rounded-lg mb-8">
+                      <p className="text-gray-600 text-sm">Please <Link href="/identify" className="text-green-600 hover:underline">sign in</Link> to write a review.</p>
+                    </div>
+                  )}
+
                   {/* Review List */}
                   <div className="space-y-6">
                     <h3 className="font-bold text-lg">Customer Reviews</h3>
 
-                    {reviews.slice(0, reviewsToShow).map((review) => (
-                      <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0">
-                        <div className="flex justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className="bg-gray-100 rounded-full h-10 w-10 flex items-center justify-center">
-                              <span className="font-medium text-gray-700">{review.user.name.charAt(0)}</span>
+                    {reviews.length > 0 ? (
+                      reviews.slice(0, reviewsToShow).map((review) => (
+                        <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0">
+                          <div className="flex justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="bg-gray-100 rounded-full h-10 w-10 flex items-center justify-center">
+                                <span className="font-medium text-gray-700">{review.user.name.charAt(0)}</span>
+                              </div>
+                              <div>
+                                <h4 className="font-medium">{review.user.name}</h4>
+                                <div className="flex items-center gap-1">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`h-3 w-3 ${
+                                        i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+                                      }`}
+                                    />
+                                  ))}
+                                  <span className="text-xs text-gray-500 ml-1">
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium">{review.user.name}</h4>
-                              <div className="flex items-center gap-1">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`h-3 w-3 ${
-                                      i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
-                                    }`}
+
+                            {review.verified && (
+                              <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full flex items-center">
+                                <Check className="h-3 w-3 mr-1" />
+                                Verified Purchase
+                              </span>
+                            )}
+                          </div>
+
+                          <h5 className="font-medium mb-2">{review.title}</h5>
+                          <p className="text-gray-600 mb-3">{review.comment}</p>
+
+                          {review.images && review.images.length > 0 && (
+                            <div className="flex gap-2 mb-3">
+                              {review.images.map((image, imgIndex) => (
+                                <div key={imgIndex} className="relative h-16 w-16 rounded-lg overflow-hidden">
+                                  <Image
+                                    src={image}
+                                    alt={`Review image ${imgIndex + 1}`}
+                                    fill
+                                    className="object-cover"
                                   />
-                                ))}
-                                <span className="text-xs text-gray-500 ml-1">
-                                  {new Date(review.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
+                                </div>
+                              ))}
                             </div>
-                          </div>
-
-                          {review.verified && (
-                            <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full flex items-center">
-                              <Check className="h-3 w-3 mr-1" />
-                              Verified Purchase
-                            </span>
                           )}
-                        </div>
 
-                        <h5 className="font-medium mb-2">{review.title}</h5>
-                        <p className="text-gray-600 mb-3">{review.comment}</p>
-
-                        {review.images && review.images.length > 0 && (
-                          <div className="flex gap-2 mb-3">
-                            {review.images.map((image, imgIndex) => (
-                              <div key={imgIndex} className="relative h-16 w-16 rounded-lg overflow-hidden">
-                                <Image
-                                  src={image}
-                                  alt={`Review image ${imgIndex + 1}`}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            ))}
+                          <div className="flex items-center gap-4 mt-3">
+                            <button 
+                              onClick={() => handleReviewHelpful(review._id)}
+                              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                            >
+                              <ThumbsUp className="h-3 w-3" />
+                              Helpful ({review.helpful || 0})
+                            </button>
+                            <button className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+                              <MessageCircle className="h-3 w-3" />
+                              Reply
+                            </button>
                           </div>
-                        )}
-
-                        <div className="flex items-center gap-4 mt-3">
-                          <button 
-                            onClick={() => handleReviewHelpful(review._id)}
-                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-                          >
-                            <ThumbsUp className="h-3 w-3" />
-                            Helpful ({review.helpful || 0})
-                          </button>
-                          <button className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
-                            <MessageCircle className="h-3 w-3" />
-                            Reply
-                          </button>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
                       </div>
-                    ))}
+                    )}
 
                     {reviewsToShow < reviews.length && (
                       <div className="text-center">

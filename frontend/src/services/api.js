@@ -73,7 +73,10 @@ export const markReviewHelpful = async (reviewId) => {
 
 export const addReview = async (productId, reviewData) => {
   try {
-    const response = await api.post(`/reviews/${productId}`, reviewData);
+    const response = await api.post(`/reviews`, {
+      ...reviewData,
+      product: productId
+    });
     return response.data;
   } catch (error) {
     console.error('Error adding review:', error.response?.data || error.message);

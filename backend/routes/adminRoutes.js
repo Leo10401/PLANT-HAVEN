@@ -87,6 +87,224 @@ router.get('/dashboard', verifyAdmin, async (req, res) => {
     }
 });
 
+// Analytics endpoint for advanced dashboard data
+router.get('/analytics', verifyAdmin, async (req, res) => {
+    try {
+        const timeRange = req.query.timeRange || '30days';
+        console.log(`Fetching analytics data for timeRange: ${timeRange}`);
+        
+        // Calculate date range based on timeRange parameter
+        const now = new Date();
+        let startDate = new Date();
+        
+        switch(timeRange) {
+            case '7days':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30days':
+                startDate.setDate(now.getDate() - 30);
+                break;
+            case '90days':
+                startDate.setDate(now.getDate() - 90);
+                break;
+            case '1year':
+                startDate.setFullYear(now.getFullYear() - 1);
+                break;
+            default:
+                startDate.setDate(now.getDate() - 30); // Default to 30 days
+        }
+        
+        // Get summary data
+        const [
+            users,
+            sellers,
+            products,
+            orders
+        ] = await Promise.all([
+            User.countDocuments(),
+            Seller.countDocuments(),
+            Product.countDocuments(),
+            Order.find({
+                createdAt: { $gte: startDate }
+            })
+        ]);
+        
+        // Calculate revenue and average order value
+        let totalRevenue = 0;
+        
+        orders.forEach(order => {
+            if (order.totalAmount) {
+                totalRevenue += order.totalAmount;
+            }
+        });
+        
+        const averageOrderValue = orders.length > 0 
+            ? Math.round(totalRevenue / orders.length) 
+            : 0;
+            
+        // Get daily sales data
+        const dailySalesData = await Order.aggregate([
+            { 
+                $match: { 
+                    createdAt: { $gte: startDate },
+                    status: { $nin: ['cancelled', 'refunded'] }
+                } 
+            },
+            {
+                $group: {
+                    _id: { 
+                        $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } 
+                    },
+                    revenue: { $sum: "$totalAmount" },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+        
+        // Transform to desired format
+        const daily = dailySalesData.map(item => ({
+            date: item._id,
+            revenue: item.revenue,
+            orders: item.count
+        }));
+        
+        // Get category data
+        const categoriesData = await Product.aggregate([
+            {
+                $group: {
+                    _id: "$category",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+        
+        // Get revenue by category from orders
+        const categoryRevenueData = await Order.aggregate([
+            { 
+                $match: { 
+                    createdAt: { $gte: startDate },
+                    status: { $nin: ['cancelled', 'refunded'] }
+                } 
+            },
+            { $unwind: "$items" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "items.productId",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+            {
+                $group: {
+                    _id: "$product.category",
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            }
+        ]);
+        
+        // Combine category data
+        const categoryRevenueMap = {};
+        categoryRevenueData.forEach(item => {
+            if (item._id) {
+                categoryRevenueMap[item._id] = item.revenue;
+            }
+        });
+        
+        const categories = categoriesData.map(category => ({
+            name: category._id || 'Uncategorized',
+            count: category.count,
+            revenue: categoryRevenueMap[category._id] || 0
+        }));
+        
+        // Get top products
+        const topProductsData = await Order.aggregate([
+            { 
+                $match: { 
+                    createdAt: { $gte: startDate },
+                    status: { $nin: ['cancelled', 'refunded'] }
+                } 
+            },
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.productId",
+                    sales: { $sum: "$items.quantity" },
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+            { $sort: { sales: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" }
+        ]);
+        
+        const topProducts = topProductsData.map(item => ({
+            name: item.product.name,
+            sales: item.sales,
+            revenue: item.revenue
+        }));
+        
+        // Get user growth data (monthly)
+        const userGrowthData = await User.aggregate([
+            {
+                $group: {
+                    _id: { 
+                        $dateToString: { format: "%Y-%m", date: "$createdAt" } 
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } },
+            { $limit: 12 }
+        ]);
+        
+        // Convert month numbers to names
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        const userGrowth = userGrowthData.map(item => {
+            const [year, month] = item._id.split('-');
+            return {
+                month: monthNames[parseInt(month) - 1],
+                users: item.count
+            };
+        });
+        
+        // Prepare and send the response
+        const analyticsData = {
+            summary: {
+                totalRevenue,
+                totalOrders: orders.length,
+                totalProducts: products,
+                totalUsers: users,
+                totalSellers: sellers,
+                averageOrderValue
+            },
+            sales: { daily },
+            categories,
+            topProducts,
+            userGrowth
+        };
+        
+        res.json(analyticsData);
+    } catch (error) {
+        console.error('Error fetching analytics data:', error);
+        res.status(500).json({ 
+            message: 'Error fetching analytics data', 
+            error: error.message 
+        });
+    }
+});
+
 // Delete a user
 router.delete('/users/:id', verifyAdmin, async (req, res) => {
     try {

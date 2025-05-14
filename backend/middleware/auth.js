@@ -10,9 +10,7 @@ const auth = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         
-        if (decoded.role !== 'seller') {
-            return res.status(403).json({ message: 'Access denied. Seller role required.' });
-        }
+        // Removed seller role restriction - allow any authenticated user
 
         // Handle both id and _id fields for backwards compatibility
         if (decoded._id && !decoded.id) {
