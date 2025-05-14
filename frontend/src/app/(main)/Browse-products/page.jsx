@@ -1,18 +1,24 @@
 "use client"
 
-import React from "react"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from "next/link"
 import Image from "next/image"
 import { Leaf, Search, Heart, ShoppingBag, X, Filter, ArrowUpDown, Check, Star } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
+import { toast } from 'react-hot-toast'
+import { useAuth } from '@/context/AuthContext'
+import { useCart } from '@/context/CartContext'
+import { CartIcon } from "@/components/ui/CartIcon"
 
 export default function ShopPage() {
-  // State for filters and products
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { isAuthenticated } = useAuth()
+  const { addToCart: addToCartContext } = useCart()
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilters, setActiveFilters] = useState([])
@@ -24,6 +30,14 @@ export default function ShopPage() {
   const [filteredProducts, setFilteredProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Get category from URL parameters
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam && !activeFilters.includes(categoryParam)) {
+      setActiveFilters(prev => [...prev, categoryParam])
+    }
+  }, [searchParams])
 
   // Fetch products from backend
   useEffect(() => {
@@ -202,12 +216,7 @@ export default function ShopPage() {
             <button className="p-2 rounded-full hover:bg-green-100 transition-colors">
               <Heart className="h-5 w-5 text-gray-600" />
             </button>
-            <Link href="/user/cart" className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors relative">
-              <ShoppingBag className="h-5 w-5 text-green-600" />
-              <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                0
-              </span>
-            </Link>
+            <CartIcon />
             <button
               className="md:hidden p-2 rounded-full hover:bg-green-100 transition-colors"
               onClick={() => setMobileFiltersOpen(true)}

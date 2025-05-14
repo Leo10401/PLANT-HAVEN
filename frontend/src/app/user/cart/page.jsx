@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCart } from "@/context/CartContext"
 import { useSelectedItems } from "@/context/SelectedItemsContext"
+import { CartIcon } from '@/components/ui/CartIcon'
 
 export default function CartPage() {
   const router = useRouter()
@@ -189,12 +190,7 @@ export default function CartPage() {
             <button className="p-2 rounded-full hover:bg-green-100 transition-colors">
               <Heart className="h-5 w-5 text-gray-600" />
             </button>
-            <Link href="/user/cart" className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors relative">
-              <ShoppingBag className="h-5 w-5 text-green-600" />
-              <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                {cartItems.length}
-              </span>
-            </Link>
+            <CartIcon />
           </div>
         </div>
       </header>
@@ -275,7 +271,7 @@ export default function CartPage() {
                         {/* Product Image */}
                         <div className="relative h-24 w-24 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
                           <Image 
-                            src={item.product.image || "/placeholder.svg"} 
+                            src={item.product.images && item.product.images.length > 0 ? item.product.images[0] : "/placeholder.svg"} 
                             alt={item.product.name} 
                             fill 
                             className="object-cover" 
