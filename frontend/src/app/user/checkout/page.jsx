@@ -28,6 +28,7 @@ export default function Checkout() {
   const { user, loading, isAuthenticated } = useAuth();
   const { selectedItems, selectedItemsData, orderSummary, clearSelectedItems, updateSelectedItems } = useSelectedItems();
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState('');
   const [formData, setFormData] = useState({
     shipping: {
       address: '',
@@ -86,6 +87,18 @@ export default function Checkout() {
       extractUserId();
     }
   }, [user, loading]);
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   useEffect(() => {
     // Redirect to cart if no items are selected
@@ -167,6 +180,217 @@ export default function Checkout() {
     }
   };
 
+  const handlePayment = async () => {
+    setIsLoading(true);
+    setPaymentStatus('Processing');
+    toast.loading('Processing payment...', {
+      id: 'payment-loading',
+    });
+
+    try {
+      // Get token for API calls
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token missing. Please log in again.');
+        router.push('/');
+        return;
+      }
+
+      // Validate amount
+      if (!orderSummary.total || orderSummary.total <= 0) {
+        toast.error('Invalid order amount');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Creating Razorpay order with amount:', orderSummary.total);
+
+      // Create Razorpay order
+      const response = await fetch('http://localhost:5000/razorpay/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: parseFloat(orderSummary.total),
+          currency: 'INR',
+        }),
+      });
+
+      // Log response for debugging
+      console.log('Razorpay create order response status:', response.status);
+      const responseText = await response.text();
+      console.log('Razorpay create order response text:', responseText);
+      
+      let order;
+      try {
+        order = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse JSON response:', e);
+        throw new Error('Invalid response from server');
+      }
+      
+      if (!response.ok) {
+        throw new Error(order.error || order.details || 'Failed to create order');
+      }
+
+      // Configure Razorpay options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_mBrgrYqmzTYUjw', // Fallback to test key
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Qkart',
+        description: 'Order Payment',
+        order_id: order.id,
+        handler: async function(response) {
+          try {
+            // Verify payment
+            const verifyResponse = await fetch('http://localhost:5000/razorpay/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            
+            const verifyData = await verifyResponse.json();
+            
+            if (verifyResponse.ok && verifyData.success) {
+              toast.success('Payment successful!');
+              setPaymentStatus('Complete');
+              
+              // Now create the order with the frontend's existing process
+              await processOrder(true, {
+                id: response.razorpay_payment_id,
+                status: 'Complete',
+                update_time: new Date().toISOString(),
+              });
+            } else {
+              toast.error('Payment verification failed!');
+              setPaymentStatus('Failed');
+              setIsLoading(false);
+            }
+          } catch (error) {
+            console.error('Error during payment verification:', error);
+            toast.error('Payment verification failed');
+            setPaymentStatus('Failed');
+            setIsLoading(false);
+          }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: formData.shipping.phoneNumber,
+        },
+        theme: {
+          color: '#10b981', // Green color to match your theme
+        },
+        modal: {
+          ondismiss: function() {
+            toast.dismiss('payment-loading');
+            setIsLoading(false);
+            console.log('Payment modal closed');
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+      
+    } catch (error) {
+      console.error('Error during payment:', error);
+      toast.error('Failed to initiate payment');
+      setPaymentStatus('Failed');
+      setIsLoading(false);
+    }
+  };
+
+  const processOrder = async (isPaid = false, paymentResult = null) => {
+    try {
+      // Get token for API calls
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token missing. Please log in again.');
+        router.push('/');
+        return;
+      }
+      
+      // Prepare order items
+      const orderItems = selectedItemsData.map(item => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+        price: item.product.price * (1 - (item.product.discount || 0) / 100),
+        name: item.product.name,
+        image: item.product.image || "/placeholder.svg"
+      }));
+      
+      // Create order
+      const createOrderResult = await fetch('http://localhost:5000/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId,
+          items: orderItems,
+          shippingAddress: formData.shipping,
+          paymentMethod: formData.paymentMethod,
+          paymentResult: paymentResult,
+          totalAmount: orderSummary.total,
+          status: formData.paymentMethod === 'cashOnDelivery' ? 'pending' : 'processing',
+          isPaid: isPaid,
+          paidAt: isPaid ? new Date().toISOString() : null
+        }),
+      });
+      
+      const orderData = await createOrderResult.json();
+      
+      if (createOrderResult.ok) {
+        toast.success('Order placed successfully!');
+        
+        // Clear selected items after successful checkout
+        clearSelectedItems();
+        
+        // Debug logs
+        console.log('Order created successfully, redirecting to confirmation page');
+        console.log('Order ID:', orderData.order._id);
+        console.log('Redirect URL:', `/user/order-confirmation/${orderData.order._id}`);
+        
+        try {
+          // Try router.replace first (more reliable for dynamic route params)
+          router.replace(`/user/order-confirmation/${orderData.order._id}`);
+          
+          // Set a fallback manual redirect after a short delay if router navigation fails
+          setTimeout(() => {
+            if (window.location.pathname !== `/user/order-confirmation/${orderData.order._id}`) {
+              console.log('Fallback redirect triggered');
+              window.location.href = `/user/order-confirmation/${orderData.order._id}`;
+            }
+          }, 1000);
+        } catch (navError) {
+          console.error('Navigation error:', navError);
+          // Fallback to manual redirect
+          window.location.href = `/user/order-confirmation/${orderData.order._id}`;
+        }
+      } else {
+        toast.error(orderData.message || 'Failed to place order');
+        throw new Error('Failed to place order');
+      }
+    } catch (error) {
+      toast.error('Failed to place order');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -217,75 +441,16 @@ export default function Checkout() {
         throw apiError;
       }
       
-      // Create the order
-      try {
-        // Prepare order items
-        const orderItems = selectedItemsData.map(item => ({
-          productId: item.product._id,
-          quantity: item.quantity,
-          price: item.product.price * (1 - (item.product.discount || 0) / 100),
-          name: item.product.name,
-          image: item.product.image || "/placeholder.svg"
-        }));
-        
-        // Create order
-        const createOrderResult = await fetch('http://localhost:5000/orders/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            userId,
-            items: orderItems,
-            shippingAddress: formData.shipping,
-            paymentMethod: formData.paymentMethod,
-            totalAmount: orderSummary.total,
-            status: formData.paymentMethod === 'cashOnDelivery' ? 'pending' : 'processing'
-          }),
-        });
-        
-        const orderData = await createOrderResult.json();
-        
-        if (createOrderResult.ok) {
-          toast.success('Order placed successfully!');
-          
-          // Clear selected items after successful checkout
-          clearSelectedItems();
-          
-          // Debug logs
-          console.log('Order created successfully, redirecting to confirmation page');
-          console.log('Order ID:', orderData.order._id);
-          console.log('Redirect URL:', `/user/order-confirmation/${orderData.order._id}`);
-          
-          try {
-            // Try router.replace first (more reliable for dynamic route params)
-            router.replace(`/user/order-confirmation/${orderData.order._id}`);
-            
-            // Set a fallback manual redirect after a short delay if router navigation fails
-            setTimeout(() => {
-              if (window.location.pathname !== `/user/order-confirmation/${orderData.order._id}`) {
-                console.log('Fallback redirect triggered');
-                window.location.href = `/user/order-confirmation/${orderData.order._id}`;
-              }
-            }, 1000);
-          } catch (navError) {
-            console.error('Navigation error:', navError);
-            // Fallback to manual redirect
-            window.location.href = `/user/order-confirmation/${orderData.order._id}`;
-          }
-        } else {
-          toast.error(orderData.message || 'Failed to place order');
-          throw new Error('Failed to place order');
-        }
-      } catch (apiError) {
-        console.error('API error creating order:', apiError);
-        throw apiError;
+      // Handle payment method
+      if (formData.paymentMethod === 'razorpay') {
+        handlePayment();
+      } else {
+        // For other payment methods (credit card or COD)
+        await processOrder(formData.paymentMethod === 'creditCard');
       }
     } catch (error) {
       toast.error('Failed to place order');
       console.error(error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -347,14 +512,14 @@ export default function Checkout() {
             <button className="p-2 rounded-full hover:bg-green-100 transition-colors">
               <Heart className="h-5 w-5 text-gray-600" />
             </button>
-            <button className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors relative">
+            <Link href="/user/cart" className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors relative">
               <ShoppingBag className="h-5 w-5 text-green-600" />
               {selectedItemsData.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
                   {selectedItemsData.length}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -586,16 +751,17 @@ export default function Checkout() {
                   <div className="flex items-center p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-green-500 transition-colors">
                     <input
                       type="radio"
-                      id="paypal"
+                      id="razorpay"
                       name="paymentMethod"
-                      value="paypal"
-                      checked={formData.paymentMethod === 'paypal'}
+                      value="razorpay"
+                      checked={formData.paymentMethod === 'razorpay'}
                       onChange={handleChange}
                       className="h-4 w-4 text-green-600 focus:ring-green-500 rounded-full border-gray-300"
                     />
-                    <label htmlFor="paypal" className="ml-3 flex items-center cursor-pointer">
-                      <Globe className="h-5 w-5 mr-2 text-gray-600" />
-                      <span>PayPal</span>
+                    <label htmlFor="razorpay" className="ml-3 flex items-center cursor-pointer">
+                      <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
+                      <span>Razorpay</span>
+                      <span className="ml-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Recommended</span>
                     </label>
                   </div>
                   

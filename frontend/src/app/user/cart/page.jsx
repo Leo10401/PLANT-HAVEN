@@ -189,12 +189,12 @@ export default function CartPage() {
             <button className="p-2 rounded-full hover:bg-green-100 transition-colors">
               <Heart className="h-5 w-5 text-gray-600" />
             </button>
-            <button className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors relative">
+            <Link href="/user/cart" className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors relative">
               <ShoppingBag className="h-5 w-5 text-green-600" />
               <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
                 {cartItems.length}
               </span>
-            </button>
+            </Link>
           </div>
         </div>
       </header>
