@@ -94,6 +94,7 @@ export default function AdminDashboard() {
       // Ensure token is properly formatted
       const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       
+      console.log('Fetching dashboard data...');
       // Fetch dashboard stats
       const response = await fetch('http://localhost:5000/admin/dashboard', {
         method: 'GET',
@@ -109,14 +110,22 @@ export default function AdminDashboard() {
           router.push('/');
           return;
         }
-        throw new Error('Failed to fetch dashboard data');
+        
+        // Try to get the error message from the response
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error response:', errorData);
+        throw new Error(errorData.message || errorData.error || 'Failed to fetch dashboard data');
       }
 
       const data = await response.json();
+      console.log('Dashboard data received:', data);
       setStats(data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      toast.error('Failed to load dashboard data');
+      toast.error(`Error: ${error.message || 'Failed to load dashboard data'}`);
+      
+      // Use sample data as fallback
+      setStats(sampleStats);
     } finally {
       setIsLoading(false);
     }

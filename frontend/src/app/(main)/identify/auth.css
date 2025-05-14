@@ -502,7 +502,6 @@ input:focus {
     padding: 10px 30px;
   }
 }
-
 /* Role Choice Styles */
 .role-choice-container {
   display: flex;
@@ -550,3 +549,4 @@ input:focus {
   opacity: 0.7;
   cursor: not-allowed;
 }
+

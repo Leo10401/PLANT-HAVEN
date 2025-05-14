@@ -99,7 +99,15 @@ export default function AuthPage() {
         const userResult = await login(values, 'user');
         if (userResult.success) {
           localStorage.setItem('selectedRole', 'user');
-          router.push('/');
+          
+          // Check if user is an admin and redirect to admin dashboard
+          if (userResult.user && userResult.user.role === 'admin') {
+            // Replace router navigation with full page reload
+            window.location.href = '/admin/dashboard';
+          } else {
+            // Replace router navigation with full page reload
+            window.location.href = '/';
+          }
           return;
         }
 
@@ -107,7 +115,8 @@ export default function AuthPage() {
         const sellerResult = await login(values, 'seller');
         if (sellerResult.success) {
           localStorage.setItem('selectedRole', 'seller');
-          router.push('/seller/dashboard');
+          // Replace router navigation with full page reload
+          window.location.href = '/seller/dashboard';
           return;
         }
 
@@ -134,9 +143,14 @@ export default function AuthPage() {
         localStorage.setItem('selectedRole', role);
         
         if (role === 'seller') {
-          router.push('/seller/dashboard');
+          // Replace router navigation with full page reload
+          window.location.href = '/seller/dashboard';
+        } else if (result.user && result.user.role === 'admin') {
+          // Redirect admin users to admin dashboard with full page reload
+          window.location.href = '/admin/dashboard';
         } else {
-          router.push('/');
+          // Replace router navigation with full page reload
+          window.location.href = '/';
         }
       } else {
         toast.error('Login failed');

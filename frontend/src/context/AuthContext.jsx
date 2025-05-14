@@ -214,6 +214,10 @@ export function AuthProvider({ children }) {
         const selectedRole = localStorage.getItem('selectedRole');
         return selectedRole === 'seller';
     };
+    
+    const isAdmin = () => {
+        return user && user.role === 'admin';
+    };
 
     const updateUserProfile = async (data) => {
         try {
@@ -257,6 +261,7 @@ export function AuthProvider({ children }) {
             logout,
             isAuthenticated,
             isSeller,
+            isAdmin,
             updateUserProfile
         }}>
             {children}
