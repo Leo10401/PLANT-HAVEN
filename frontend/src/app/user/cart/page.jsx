@@ -48,34 +48,39 @@ export default function CartPage() {
 
   // Calculate totals whenever cart items or selected items change
   useEffect(() => {
-    const selectedCartItems = cartItems.filter(item => selectedItems.includes(item.product._id))
+    // Filter out selected items that have valid products
+    const selectedCartItems = cartItems.filter(item => 
+      item.product && selectedItems.includes(item.product._id)
+    );
 
     // Calculate subtotal of selected items
     const newSubtotal = selectedCartItems.reduce((sum, item) => {
+      if (!item.product) return sum;
+      
       const itemPrice = item.product.discount > 0 
         ? item.product.price * (1 - item.product.discount / 100) 
-        : item.product.price
-      return sum + itemPrice * item.quantity
-    }, 0)
+        : item.product.price;
+      return sum + itemPrice * item.quantity;
+    }, 0);
 
     // Set shipping based on subtotal
-    const newShipping = newSubtotal > 50 ? 0 : 5.99
+    const newShipping = newSubtotal > 50 ? 0 : 5.99;
 
     // Calculate tax (assuming 8% tax rate)
-    const newTax = newSubtotal * 0.08
+    const newTax = newSubtotal * 0.08;
 
     // Calculate discount from promo code (10% if applied)
-    const newDiscount = promoApplied ? newSubtotal * 0.1 : 0
+    const newDiscount = promoApplied ? newSubtotal * 0.1 : 0;
 
     // Calculate total
-    const newTotal = newSubtotal + newShipping + newTax - newDiscount
+    const newTotal = newSubtotal + newShipping + newTax - newDiscount;
 
-    setSubtotal(newSubtotal)
-    setShipping(newShipping)
-    setTax(newTax)
-    setDiscount(newDiscount)
-    setTotal(newTotal)
-  }, [cartItems, selectedItems, promoApplied])
+    setSubtotal(newSubtotal);
+    setShipping(newShipping);
+    setTax(newTax);
+    setDiscount(newDiscount);
+    setTotal(newTotal);
+  }, [cartItems, selectedItems, promoApplied]);
 
   // Toggle item selection
   const toggleItemSelected = (productId) => {
@@ -89,7 +94,10 @@ export default function CartPage() {
   // Toggle all items selection
   const toggleAllSelected = (checked) => {
     if (checked) {
-      setSelectedItems(cartItems.map(item => item.product._id))
+      // Only select items with valid products
+      setSelectedItems(cartItems
+        .filter(item => item.product) // Filter out null products
+        .map(item => item.product._id))
     } else {
       setSelectedItems([])
     }
@@ -122,8 +130,9 @@ export default function CartPage() {
   const handleProceedToCheckout = () => {
     if (selectedItems.length === 0) return;
     
-    // Get selected items data
-    const selectedCartItems = cartItems.filter(item => selectedItems.includes(item.product._id));
+    // Get selected items data - make sure to only include valid products
+    const selectedCartItems = cartItems
+      .filter(item => item.product && selectedItems.includes(item.product._id));
     
     // Update the context with selected items and summary
     updateSelectedItems(selectedItems);
@@ -142,7 +151,8 @@ export default function CartPage() {
   };
 
   // Check if all items are selected
-  const allSelected = cartItems.length > 0 && cartItems.every(item => selectedItems.includes(item.product._id))
+  const allSelected = cartItems.length > 0 && 
+    cartItems.filter(item => item.product).every(item => selectedItems.includes(item.product._id))
 
   if (loading) {
     return (
@@ -239,7 +249,7 @@ export default function CartPage() {
                       onCheckedChange={(checked) => toggleAllSelected(!!checked)}
                     />
                     <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
-                      Select All ({cartItems.length} items)
+                      Select All ({cartItems.filter(item => item.product).length} items)
                     </label>
                   </div>
 
@@ -257,22 +267,22 @@ export default function CartPage() {
                 {/* Cart Items */}
                 <div className="divide-y divide-gray-100">
                   {cartItems.map((item) => (
-                    <div key={item.product._id} className="p-6">
+                    <div key={item.product?._id || `item-${Math.random()}`} className="p-6">
                       <div className="flex gap-4">
                         {/* Checkbox */}
                         <div className="pt-2">
                           <Checkbox
-                            id={`item-${item.product._id}`}
-                            checked={selectedItems.includes(item.product._id)}
-                            onCheckedChange={() => toggleItemSelected(item.product._id)}
+                            id={`item-${item.product?._id || Math.random()}`}
+                            checked={item.product && selectedItems.includes(item.product._id)}
+                            onCheckedChange={() => item.product && toggleItemSelected(item.product._id)}
                           />
                         </div>
 
                         {/* Product Image */}
                         <div className="relative h-24 w-24 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
                           <Image 
-                            src={item.product.images && item.product.images.length > 0 ? item.product.images[0] : "/placeholder.svg"} 
-                            alt={item.product.name} 
+                            src={item.product?.images && item.product.images.length > 0 ? item.product.images[0] : "/placeholder.svg"} 
+                            alt={item.product?.name || "Product"} 
                             fill 
                             className="object-cover" 
                           />
@@ -282,51 +292,68 @@ export default function CartPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col h-full justify-between">
                             <div>
-                              <h3 className="font-medium text-lg mb-1 truncate">{item.product.name}</h3>
-                              <p className="text-sm text-gray-500 mb-2">{item.product.category}</p>
+                              <h3 className="font-medium text-lg mb-1 truncate">{item.product?.name || "Product Unavailable"}</h3>
+                              <p className="text-sm text-gray-500 mb-2">{item.product?.category || "Unknown"}</p>
 
                               {/* Price */}
                               <div className="flex items-center gap-2 mb-3">
-                                <span className="font-medium text-green-600">
-                                  ₹{(item.product.price * (1 - (item.product.discount || 0) / 100)).toFixed(2)}
-                                </span>
-                                {item.product.discount > 0 && (
+                                {item.product ? (
                                   <>
-                                    <span className="text-sm text-gray-500 line-through">
-                                      ₹{item.product.price.toFixed(2)}
+                                    <span className="font-medium text-green-600">
+                                      ₹{(item.product.price * (1 - (item.product.discount || 0) / 100)).toFixed(2)}
                                     </span>
-                                    <span className="text-sm text-green-600">
-                                      ({item.product.discount}% off)
-                                    </span>
+                                    {item.product.discount > 0 && (
+                                      <>
+                                        <span className="text-sm text-gray-500 line-through">
+                                          ₹{item.product.price.toFixed(2)}
+                                        </span>
+                                        <span className="text-sm text-green-600">
+                                          ({item.product.discount}% off)
+                                        </span>
+                                      </>
+                                    )}
                                   </>
+                                ) : (
+                                  <span className="text-red-500">Product unavailable</span>
                                 )}
                               </div>
                             </div>
 
                               {/* Quantity Controls */}
                             <div className="flex items-center gap-4">
-                              <div className="flex items-center border rounded-lg">
-                                <button
-                                  className="p-2 hover:bg-gray-100 transition-colors"
-                                  onClick={() => handleQuantityUpdate(item.product._id, item.quantity - 1)}
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </button>
-                                <span className="px-4 py-2">{item.quantity}</span>
-                                <button
-                                  className="p-2 hover:bg-gray-100 transition-colors"
-                                  onClick={() => handleQuantityUpdate(item.product._id, item.quantity + 1)}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </button>
-                              </div>
+                              {item.product ? (
+                                <>
+                                  <div className="flex items-center border rounded-lg">
+                                    <button
+                                      className="p-2 hover:bg-gray-100 transition-colors"
+                                      onClick={() => handleQuantityUpdate(item.product._id, item.quantity - 1)}
+                                    >
+                                      <Minus className="h-4 w-4" />
+                                    </button>
+                                    <span className="px-4 py-2">{item.quantity}</span>
+                                    <button
+                                      className="p-2 hover:bg-gray-100 transition-colors"
+                                      onClick={() => handleQuantityUpdate(item.product._id, item.quantity + 1)}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </button>
+                                  </div>
 
+                                  <button
+                                    className="text-gray-500 hover:text-red-500 transition-colors"
+                                    onClick={() => handleRemoveItem(item.product._id)}
+                                  >
+                                    <Trash2 className="h-5 w-5" />
+                                  </button>
+                                </>
+                              ) : (
                                 <button
-                                className="text-gray-500 hover:text-red-500 transition-colors"
-                                onClick={() => handleRemoveItem(item.product._id)}
+                                  className="text-red-500 hover:text-red-700 transition-colors"
+                                  onClick={() => handleRemoveItem(item._id || '')}
                                 >
-                                <Trash2 className="h-5 w-5" />
+                                  <Trash2 className="h-5 w-5" /> Remove Unavailable Item
                                 </button>
+                              )}
                             </div>
                           </div>
                         </div>

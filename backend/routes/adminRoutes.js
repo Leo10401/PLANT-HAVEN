@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/userModel');
+const { model } = require('../connection');
 const Seller = require('../models/seller');
 const Product = require('../models/productModel');
 const Order = require('../models/orderModel');
 const verifyAdmin = require('../utils/verifyAdmin');
+
+// Get User model through the connection
+const User = model('user');
 
 // Admin dashboard statistics
 router.get('/dashboard', verifyAdmin, async (req, res) => {
@@ -140,28 +143,120 @@ router.get('/sellers', verifyAdmin, async (req, res) => {
     }
 });
 
-// Get all products
+// Admin get all products
 router.get('/products', verifyAdmin, async (req, res) => {
     try {
-        const products = await Product.find()
-            .sort({ createdAt: -1 })
-            .populate('seller', 'name shopName');
+        const products = await Product.find().populate('seller', 'name shopName');
         res.json(products);
     } catch (error) {
         console.error('Error fetching products:', error);
-        res.status(500).json({ message: 'Error fetching products' });
+        res.status(500).json({ message: 'Failed to fetch products' });
+    }
+});
+
+// Admin delete product
+router.delete('/products/:id', verifyAdmin, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        await product.deleteOne();
+        res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        res.status(500).json({ message: 'Failed to delete product' });
     }
 });
 
 // Get all orders
 router.get('/orders', verifyAdmin, async (req, res) => {
     try {
-        const orders = await Order.find()
-            .sort({ createdAt: -1 });
-        res.json(orders);
+        // Get all orders
+        const orders = await Order.find().sort({ createdAt: -1 });
+        
+        console.log('Orders fetched successfully, count:', orders.length);
+        
+        // Collect all unique user IDs from orders
+        const userIds = [...new Set(orders.map(order => order.userId))];
+        
+        // Fetch user info separately
+        const users = await User.find({ _id: { $in: userIds } }).select('name email');
+        
+        // Create a map of user data for quick lookup
+        const userMap = {};
+        users.forEach(user => {
+            userMap[user._id.toString()] = {
+                name: user.name,
+                email: user.email
+            };
+        });
+        
+        // Attach user data to each order
+        const ordersWithUserInfo = orders.map(order => {
+            const orderObj = order.toObject();
+            const userId = order.userId.toString();
+            
+            if (userMap[userId]) {
+                orderObj.userId = {
+                    _id: userId,
+                    name: userMap[userId].name,
+                    email: userMap[userId].email
+                };
+            }
+            
+            return orderObj;
+        });
+        
+        res.json(ordersWithUserInfo);
     } catch (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error fetching orders detail:', error);
         res.status(500).json({ message: 'Error fetching orders' });
+    }
+});
+
+// Update order status
+router.patch('/orders/:id/status', verifyAdmin, async (req, res) => {
+    try {
+        const { status } = req.body;
+        
+        if (!status) {
+            return res.status(400).json({ message: 'Status is required' });
+        }
+        
+        const order = await Order.findById(req.params.id);
+        
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        
+        order.status = status;
+        
+        // If marked as delivered, update delivery status
+        if (status === 'delivered') {
+            order.isDelivered = true;
+            order.deliveredAt = Date.now();
+        }
+        
+        // If cancelled, restore product stock
+        if (status === 'cancelled' && ['pending', 'processing'].includes(order.status)) {
+            for (const item of order.items) {
+                await Product.findByIdAndUpdate(
+                    item.productId,
+                    { $inc: { stock: item.quantity } },
+                    { new: true }
+                );
+            }
+        }
+        
+        await order.save();
+        
+        res.json({ message: 'Order status updated successfully', order });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ message: 'Failed to update order status' });
     }
 });
 
