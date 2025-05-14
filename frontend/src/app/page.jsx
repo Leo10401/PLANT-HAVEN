@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   Truck,
   Search,
-  Heart,
   ShoppingBag,
   Menu,
   X,
@@ -25,6 +24,7 @@ import {
   Filter,
   User,
   LogOut,
+  Plus,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -42,10 +42,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { CartIcon } from "@/components/ui/CartIcon"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
   // Apply staggered animations to various elements
-  const featuredProductRef = useRef(null)
   const categoryItemRef = useRef(null)
   const benefitItemRef = useRef(null)
   const navItemRef = useRef(null)
@@ -60,6 +61,9 @@ export default function Home() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const searchParams = useSearchParams()
   const { user, isAuthenticated, logout } = useAuth()
+  const router = useRouter()
+  const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false)
+  const avatarDropdownRef = useRef(null)
 
   useEffect(() => {
     const error = searchParams.get('error')
@@ -129,7 +133,6 @@ export default function Home() {
     )
 
     const refs = [
-      { ref: featuredProductRef, selector: '.featured-product', delay: 100 },
       { ref: categoryItemRef, selector: '.category-item', delay: 150 },
       { ref: benefitItemRef, selector: '.benefit-item', delay: 200 },
       { ref: navItemRef, selector: '.nav-item', delay: 50 }
@@ -149,19 +152,31 @@ export default function Home() {
     return () => observer.disconnect()
   }, [prefersReducedMotion])
 
+  // Close avatar dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target)) {
+        setIsAvatarDropdownOpen(false)
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   // Testimonial data
   const testimonials = [
     {
       name: "Sarah Johnson",
       role: "Interior Designer",
-      image: "/placeholder.svg?height=100&width=100",
+      image: "/placeholder-user.jpg",
       quote: "The plants I ordered arrived in perfect condition. They've transformed my living space completely!",
       rating: 5,
     },
     {
       name: "Michael Chen",
       role: "Home Gardener",
-      image: "/placeholder.svg?height=100&width=100",
+      image: "/placeholder-user.jpg",
       quote:
         "Exceptional quality and customer service. My fiddle leaf fig is thriving and the care guide was very helpful.",
       rating: 5,
@@ -169,7 +184,7 @@ export default function Home() {
     {
       name: "Emily Rodriguez",
       role: "Plant Enthusiast",
-      image: "/placeholder.svg?height=100&width=100",
+      image: "/placeholder-user.jpg",
       quote: "I'm impressed with how carefully the plants were packaged. Will definitely be ordering more soon!",
       rating: 4,
     },
@@ -303,42 +318,54 @@ export default function Home() {
               <button className="p-2 rounded-full hover:bg-green-100 transition-all-300 hover-scale touch-larger-hit">
                 <Search className="h-5 w-5 text-gray-600" />
               </button>
-              <button className="hidden sm:flex p-2 rounded-full hover:bg-green-100 transition-all-300 hover-scale touch-larger-hit">
-                <Heart className="h-5 w-5 text-gray-600" />
-              </button>
-              <Link href="/user/cart" className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-all-300 hover-scale relative touch-larger-hit">
-                <ShoppingBag className="h-5 w-5 text-green-600" />
-                <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse-slow">
-                  0
-                </span>
-              </Link>
+              <CartIcon className="transition-all-300 hover-scale touch-larger-hit" />
 
               {isAuthenticated() ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-2 rounded-full hover:bg-green-100 transition-all-300 hover-scale touch-larger-hit">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.profilePicture || "/placeholder.svg"} alt={user?.name || "User"} />
-                        <AvatarFallback className="bg-green-100 text-green-600">
-                          {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                      <User className="h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600"
-                      onClick={logout}
+                <div className="relative" ref={avatarDropdownRef}>
+                  <button
+                    onClick={() => setIsAvatarDropdownOpen(!isAvatarDropdownOpen)}
+                    className="flex items-center gap-2 rounded-full text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none"
+                    aria-expanded={isAvatarDropdownOpen}
+                    aria-haspopup="true"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <User className="h-5 w-5 text-green-600" />
+                    </div>
+                  </button>
+                  <div 
+                    className={`absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ${
+                      isAvatarDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
+                  >
+                    <Link 
+                      href="/user/dashboard" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
                     >
-                      <LogOut className="h-4 w-4" />
-                      <span>Logout</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      Dashboard
+                    </Link>
+                    <Link 
+                      href="/user/all-orders" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
+                    >
+                      My Orders
+                    </Link>
+                    <Link 
+                      href="/user/profile" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
+                    >
+                      Profile
+                    </Link>
+                    <button 
+                      onClick={logout}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      <span className="flex items-center">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </span>
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <Link href="/identify">
                   <Button className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white rounded-full px-4 py-2 text-sm font-medium transition-all-300 hover-scale">
@@ -392,6 +419,7 @@ export default function Home() {
                   <MagneticElement strength={20}>
                     <Button
                       ref={shopNowBtnRef}
+                      onClick={() => router.push('/Browse-products')}
                       className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white rounded-full px-6 sm:px-8 py-5 sm:py-6 shadow-lg shadow-green-200 transition-all-500 hover:shadow-xl hover:shadow-green-300 button-hover-effect magnetic-button touch-larger-hit touch-active"
                       style={{
                         transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
@@ -403,6 +431,7 @@ export default function Home() {
                   </MagneticElement>
                   <Button
                     variant="outline"
+                    onClick={() => router.push('/Categories')}
                     className="border-2 border-green-200 text-green-700 hover:bg-green-50 rounded-full px-6 sm:px-8 py-5 sm:py-6 transition-all-300 button-hover-effect touch-larger-hit touch-active"
                     style={{
                       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
@@ -453,21 +482,30 @@ export default function Home() {
                   style={{ animationDelay: "1s" }}
                 ></div>
 
-                <div className="relative h-[300px] sm:h-[400px] w-full md:h-[500px] rounded-[20px] md:rounded-[40px] overflow-hidden shadow-2xl shadow-green-200/50 transform md:rotate-3 transition-transform-500 hover:rotate-0 duration-500 tilt-effect organic-shape-1"
+                <div className="relative h-[300px] sm:h-[400px] w-full md:h-[500px] rounded-xl md:rounded-2xl overflow-hidden shadow-lg border-2 border-white"
                   style={{
-                    transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                    background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
                   }}
                 >
-                  <Image
-                    src="/young.webp"
-                    alt="Beautiful plants and trees"
-                    fill
-                    className="object-contain transition-transform-500 hover-scale "
-                    style={{
-                      transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                  <div className="absolute -right-4 -top-4 w-20 h-20 bg-green-400/20 rounded-full blur-md"></div>
+                  <div className="absolute -left-4 -bottom-4 w-16 h-16 bg-emerald-400/20 rounded-full blur-md"></div>
+                  
+                  <div className="relative h-full w-full p-3 md:p-5">
+                    <div className="h-full w-full rounded-lg md:rounded-xl overflow-hidden border-4 border-white shadow-inner relative">
+                      <Image
+                        src="/young.webp"
+                        alt="Beautiful plants and trees"
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-green-800 shadow-sm">
+                    Premium Collection
+                  </div>
                 </div>
 
                 <div className="absolute -bottom-6 -left-6 bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xl max-w-[180px] sm:max-w-[200px] animate-float hidden sm:block animate-expand glass-effect">
@@ -549,114 +587,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Featured Products with creative cards */}
-          <section className="py-12 md:py-20 container mx-auto px-4 reveal-on-scroll" ref={featuredProductRef}>
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-12 animate-slide-up">
-              <div className="text-center md:text-left mb-6 md:mb-0">
-                <span className="text-green-600 font-medium">Our Selection</span>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-1 gradient-text">Featured Plants</h2>
-              </div>
-
-              {/* Mobile filter button */}
-              <div className="md:hidden flex justify-center mb-4">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-full text-green-700 text-sm font-medium"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filter
-                </button>
-              </div>
-
-              {/* Desktop category filters */}
-              <div
-                className={`mt-4 md:mt-0 flex gap-2 overflow-x-auto pb-2 md:pb-0 ${showFilters || !isMobile ? "flex" : "hidden"}`}
-              >
-                {["All", "Indoor", "Outdoor", "Succulents", "Herbs"].map((category, index) => (
-                  <button
-                    key={category}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all-300 touch-larger-hit ${
-                      activeCategory === index
-                        ? "bg-green-600 text-white"
-                        : "bg-green-50 text-green-700 hover:bg-green-100"
-                    }`}
-                    onClick={() => {
-                      setActiveCategory(index)
-                      if (isMobile) setShowFilters(false)
-                    }}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-              {featuredProducts.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="group relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all-500 hover-lift featured-product card-hover-effect reveal-on-scroll card-3d"
-                >
-                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10">
-                    <button className="p-1.5 sm:p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors-300 animate-fade-in touch-larger-hit">
-                      <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 group-hover:text-red-500 transition-colors-300" />
-                    </button>
-                  </div>
-
-                  {product.tag && (
-                    <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
-                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-green-600 text-white text-xs font-bold rounded-full">
-                        {product.tag}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="relative h-48 sm:h-64 w-full overflow-hidden bg-green-50 image-hover-zoom">
-                    <Image
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform-500"
-                    />
-                  </div>
-
-                  <div className="p-4 sm:p-6 card-3d-content">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-medium text-green-600 bg-green-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full animate-fade-in">
-                        {product.category}
-                      </span>
-                      <div className="flex items-center">
-                        <span className="text-xs text-yellow-500 mr-1">★</span>
-                        <span className="text-xs text-gray-600">{product.rating}</span>
-                      </div>
-                    </div>
-                    <h3 className="font-medium text-base sm:text-lg mt-2 group-hover:text-green-600 transition-colors-300">
-                      {product.name}
-                    </h3>
-                    <div className="flex justify-between items-center mt-3 sm:mt-4">
-                      <div>
-                        <p className="font-bold text-lg sm:text-xl">₹{product.price}</p>
-                        {product.oldPrice && (
-                          <p className="text-xs sm:text-sm text-gray-400 line-through">₹{product.oldPrice}</p>
-                        )}
-                      </div>
-                      <button className="p-2 sm:p-3 bg-green-100 rounded-full text-green-600 hover:bg-green-600 hover:text-white transition-all-300 hover-scale touch-larger-hit">
-                        <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 sm:mt-12 text-center">
-              <Button className="bg-white border-2 border-green-200 text-green-700 hover:bg-green-50 rounded-full px-6 sm:px-8 py-5 sm:py-6 transition-all-300 button-hover-effect touch-larger-hit touch-active">
-                View All Products
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform-300 group-hover:translate-x-1" />
-              </Button>
-            </div>
-          </section>
-
           {/* Categories with creative layout */}
           <section className="py-12 md:py-20 relative overflow-hidden reveal-on-scroll" ref={categoryItemRef}>
             <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 -z-10"></div>
@@ -679,16 +609,18 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {categories.map((category, index) => (
                   <Link
-                    href="#"
+                    href={`/Browse-products?category=${category.name.toLowerCase().replace(' ', '-')}`}
                     key={category.id}
                     className="group relative h-60 sm:h-80 overflow-hidden rounded-2xl sm:rounded-3xl category-item tilt-effect reveal-on-scroll spotlight"
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10"></div>
                     <Image
-                      src={category.image || "/placeholder.svg"}
+                      src={category.image || "/placeholder.jpg"}
                       alt={category.name}
-                      fill
-                      className="object-cover transition-transform-500 group-hover:scale-110"
+                      width={400}
+                      height={300}
+                      className="object-cover w-full h-full transition-transform-500 group-hover:scale-110"
+                      priority={index < 2}
                     />
                     <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 z-20">
                       <div className="bg-white/10 backdrop-blur-sm p-2 sm:p-3 rounded-lg sm:rounded-xl inline-block mb-2 glass-effect">
@@ -704,6 +636,15 @@ export default function Home() {
                     </div>
                   </Link>
                 ))}
+              </div>
+              
+              <div className="text-center mt-8">
+                <Link href="/(main)/Categories">
+                  <Button className="bg-white border-2 border-green-200 text-green-700 hover:bg-green-50 rounded-full px-6 sm:px-8 py-5 sm:py-6 transition-all-300 button-hover-effect touch-larger-hit touch-active">
+                    View All Categories
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform-300 group-hover:translate-x-1" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </section>
@@ -912,7 +853,6 @@ export default function Home() {
                     className="object-cover transition-transform-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </div>
                 </a>
               ))}
@@ -1122,63 +1062,25 @@ function getCategoryIcon(categoryName) {
 }
 
 // Sample data
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Monstera Deliciosa",
-    category: "Indoor Plants",
-    price: 39.99,
-    image: "/placeholder.svg?height=300&width=300",
-    rating: "4.9",
-    tag: "Best Seller",
-  },
-  {
-    id: 2,
-    name: "Fiddle Leaf Fig",
-    category: "Indoor Plants",
-    price: 49.99,
-    oldPrice: 59.99,
-    image: "/placeholder.svg?height=300&width=300",
-    rating: "4.7",
-  },
-  {
-    id: 3,
-    name: "Snake Plant",
-    category: "Indoor Plants",
-    price: 29.99,
-    image: "/placeholder.svg?height=300&width=300",
-    rating: "4.8",
-    tag: "New",
-  },
-  {
-    id: 4,
-    name: "Peace Lily",
-    category: "Indoor Plants",
-    price: 24.99,
-    image: "/placeholder.svg?height=300&width=300",
-    rating: "4.6",
-  },
-]
-
 const categories = [
   {
     id: 1,
-    name: "Indoor Plants",
-    image: "/placeholder.svg?height=300&width=300",
+    name: "Indoor",
+    image: "https://imgs.search.brave.com/7D6Kbftdu6GMclxmW68UoowJ59FmVcu7AizABnWAxCA/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTI5/MzUwOTY2Mi9waG90/by9pbmRvb3ItZ2Fy/ZGVuaW5nLWhvdXNl/LXBsYW50cy5qcGc_/cz02MTJ4NjEyJnc9/MCZrPTIwJmM9RWxZ/Nl9PQXR6MEowdUVK/UXduMUduUjVWN3lJ/Q09QR0hUdXZ0UTEw/alJZcz0",
   },
   {
     id: 2,
-    name: "Outdoor Plants",
-    image: "/placeholder.svg?height=300&width=300",
+    name: "Outdoor",
+    image: "https://imgs.search.brave.com/-WV-mTk_3_fY9Y2-o0lTJPHS64pYpm_S2XN8Cy9yCSk/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTA4/MzE1NTE0OC9waG90/by9jb2xsZWN0aW9u/LW9mLWhvdXNlcGxh/bnQuanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPVZablU0aFlr/NmhWWm1XZVd3OU9q/NVlHSkV5MmhGc3hU/MlpjS3NPU3BxT0U9",
   },
   {
     id: 3,
     name: "Fruit Trees",
-    image: "/placeholder.svg?height=300&width=300",
+    image: "https://imgs.search.brave.com/LOkmufJtMQteN4lRyh1KVHjr589NxPJdytIg972qFNA/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTA1/NzQ3NjE5OC9waG90/by9hcHBsZS1vcmNo/YXJkLXdpdGgtdHJl/ZXMtbG9hZGVkLXdp/dGgtcmlwZS1hcHBs/ZXMuanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPUlyUHAwSUxq/WXBOeUJ5eWJUbkxp/ZGVNTjMxRHVjS2dL/OFF4SFA5QlluVVk9",
   },
   {
     id: 4,
     name: "Gardening Tools",
-    image: "/placeholder.svg?height=300&width=300",
+    image: "https://imgs.search.brave.com/HSAdOXUfGYOxBQ8RnE3ca_Muhb6GdI-CBEK3cXxGbd4/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvNTM5/OTUzMTQ5L3Bob3Rv/L2dhcmRlbi10b29s/cy1vbi13b29kLmpw/Zz9zPTYxMng2MTIm/dz0wJms9MjAmYz1V/SHYycEpxa01xSXVH/bWRLek5LNThEbDht/Rkd5OVVLYzBNT1VG/dDlEODVzPQ",
   },
 ]

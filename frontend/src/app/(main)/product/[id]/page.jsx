@@ -34,6 +34,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { getProduct, getProductReviews, addReview, markReviewHelpful, addToCart } from "@/services/api"
 import { useAuth } from "@/context/AuthContext"
 import React from "react"
+import { CartIcon } from "@/components/ui/CartIcon"
 
 export default function ProductDetailPage({ params }) {
   const router = useRouter()
@@ -189,12 +190,7 @@ export default function ProductDetailPage({ params }) {
             <button className="p-2 rounded-full hover:bg-green-100 transition-colors">
               <Heart className={`h-5 w-5 ${isWishlisted ? "text-red-500 fill-red-500" : "text-gray-600"}`} />
             </button>
-            <Link href={'/user/cart'} className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors relative">
-              <ShoppingBag className="h-5 w-5 text-green-600" />
-              <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                0
-              </span>
-            </Link>
+            <CartIcon />
           </div>
         </div>
       </header>
