@@ -228,10 +228,10 @@ export default function SellerOrders() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
-              <Leaf className="h-6 w-6 text-white" />
+              <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-              Plant Haven
+              Qkart
             </span>
           </Link>
 
@@ -394,7 +394,7 @@ export default function SellerOrders() {
                         <TableCell className="font-medium">{order._id.substring(order._id.length - 8)}</TableCell>
                         <TableCell>{formatDate(order.createdAt)}</TableCell>
                         <TableCell>{order.items.length} item(s)</TableCell>
-                        <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
+                        <TableCell>₹{order.totalAmount.toFixed(2)}</TableCell>
                         <TableCell>
                           <span className="capitalize">
                             {order.paymentMethod === 'cashOnDelivery' ? 'Cash on Delivery' : order.paymentMethod}
@@ -482,11 +482,11 @@ export default function SellerOrders() {
                                       <h5 className="font-medium">{item.name}</h5>
                                       <div className="flex items-center justify-between text-sm text-gray-500">
                                         <span>Qty: {item.quantity}</span>
-                                        <span>${item.price.toFixed(2)} each</span>
+                                        <span>₹{item.price.toFixed(2)} each</span>
                                       </div>
                                     </div>
                                     <div className="font-medium">
-                                      ${(item.price * item.quantity).toFixed(2)}
+                                      ₹{(item.price * item.quantity).toFixed(2)}
                                     </div>
                                   </div>
                                 ))}
@@ -496,7 +496,7 @@ export default function SellerOrders() {
                                 <div className="w-full md:w-1/3 space-y-1">
                                   <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Subtotal:</span>
-                                    <span>${order.totalAmount.toFixed(2)}</span>
+                                    <span>₹{order.totalAmount.toFixed(2)}</span>
                                   </div>
                                   <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Shipping:</span>
@@ -505,7 +505,7 @@ export default function SellerOrders() {
                                   <Separator className="my-2" />
                                   <div className="flex justify-between font-medium">
                                     <span>Total:</span>
-                                    <span>${order.totalAmount.toFixed(2)}</span>
+                                    <span>₹{order.totalAmount.toFixed(2)}</span>
                                   </div>
                                 </div>
                               </div>

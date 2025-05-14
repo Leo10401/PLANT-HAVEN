@@ -313,10 +313,10 @@ export default function SellerProductOrders() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
-              <Leaf className="h-6 w-6 text-white" />
+              <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-              Plant Haven
+              Qkart
             </span>
           </Link>
 
@@ -404,7 +404,7 @@ export default function SellerProductOrders() {
                     <div>
                       <h3 className="font-medium text-lg">{product.name}</h3>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Price: ${product.price.toFixed(2)}</span>
+                        <span>Price: ₹{product.price.toFixed(2)}</span>
                         <span>Stock: {product.stock}</span>
                         <span>
                           Orders: {orders[product._id] ? orders[product._id].length : 0}
@@ -597,11 +597,11 @@ export default function SellerProductOrders() {
                           </div>
                           <div className="flex items-center justify-between text-sm text-gray-500">
                             <span>Qty: {item.quantity}</span>
-                            <span>${item.price.toFixed(2)} each</span>
+                            <span>₹{item.price.toFixed(2)} each</span>
                           </div>
                         </div>
                         <div className="font-medium">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ₹{(item.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
                     );
@@ -611,7 +611,7 @@ export default function SellerProductOrders() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-medium text-gray-700">Total Amount</h3>
-                    <p className="text-xl font-bold">${selectedOrder.totalAmount.toFixed(2)}</p>
+                    <p className="text-xl font-bold">₹{selectedOrder.totalAmount.toFixed(2)}</p>
                   </div>
                   
                   <div className="space-x-2">

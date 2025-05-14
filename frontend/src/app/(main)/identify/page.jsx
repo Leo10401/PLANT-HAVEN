@@ -271,9 +271,9 @@ export default function AuthPage() {
             <form onSubmit={signupForm.handleSubmit}>
               <div className="logo-container">
                 <div className="logo-icon">
-                  <Leaf className="h-6 w-6 text-white" />
+                  <img src="/qkartlogo.png" alt="" height={64} width={40} />
                 </div>
-                <h1 className="logo-text">Plant Haven</h1>
+                <h1 className="logo-text">Qkart</h1>
               </div>
 
               <h2 className="form-title">Create Account</h2>
@@ -371,9 +371,9 @@ export default function AuthPage() {
             <form onSubmit={loginForm.handleSubmit}>
               <div className="logo-container">
                 <div className="logo-icon">
-                  <Leaf className="h-6 w-6 text-white" />
+                  <img src="/qkartlogo.png" alt="" height={64} width={40} />
                 </div>
-                <h1 className="logo-text">Plant Haven</h1>
+                <h1 className="logo-text">Qkart</h1>
               </div>
 
               <h2 className="form-title">Sign In</h2>
@@ -453,9 +453,9 @@ export default function AuthPage() {
               <div className="overlay-panel overlay-left">
                 <div className="logo-container">
                   <div className="logo-icon">
-                    <Leaf className="h-6 w-6 text-white" />
+                    <img src="/qkartlogo.png" alt="" height={64} width={40} />
                   </div>
-                  <h1 className="logo-text">Plant Haven</h1>
+                  <h1 className="logo-text">Qkart</h1>
                 </div>
                 <h2 className="overlay-title">Welcome Back!</h2>
                 <p className="overlay-text">
@@ -468,9 +468,9 @@ export default function AuthPage() {
               <div className="overlay-panel overlay-right">
                 <div className="logo-container">
                   <div className="logo-icon">
-                    <Leaf className="h-6 w-6 text-white" />
+                    <img src="/qkartlogo.png" alt="" height={64} width={40} />
                   </div>
-                  <h1 className="logo-text">Plant Haven</h1>
+                  <h1 className="logo-text">Qkart</h1>
                 </div>
                 <h2 className="overlay-title">Hello, Friend!</h2>
                 <p className="overlay-text">

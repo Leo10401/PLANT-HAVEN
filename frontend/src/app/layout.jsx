@@ -9,7 +9,7 @@ import { SelectedItemsProvider } from "@/context/SelectedItemsContext"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Plant Haven - Premium Plants for Your Home",
+  title: "Qkart - Premium Plants for Your Home",
   description:
     "Discover our curated collection of premium plants and trees to transform your space into a lush paradise.",
     generator: 'v0.dev'

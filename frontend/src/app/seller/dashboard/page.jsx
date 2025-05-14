@@ -428,10 +428,10 @@ export default function SellerDashboard() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
-              <Leaf className="h-6 w-6 text-white" />
+              <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-              Plant Haven
+              Qkart
             </span>
           </Link>
 
@@ -1019,7 +1019,7 @@ export default function SellerDashboard() {
       {/* Footer */}
       <footer className="bg-white py-8 border-t border-green-100 mt-8">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} Plant Haven. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Qkart. All rights reserved.</p>
           <div className="mt-3 flex justify-center space-x-4">
             <button
               onClick={() => toast.success("Success notification!")}

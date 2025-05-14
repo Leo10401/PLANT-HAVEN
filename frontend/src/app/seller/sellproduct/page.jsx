@@ -15,6 +15,7 @@ const SellProductPage = () => {
 
   // Image upload state
   const [images, setImages] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -39,8 +40,10 @@ const SellProductPage = () => {
   // Handle image upload
   const handleImageUpload = (e) => {
     if (e.target.files) {
-      const newImages = Array.from(e.target.files).map((file) => URL.createObjectURL(file));
+      const files = Array.from(e.target.files);
+      const newImages = files.map((file) => URL.createObjectURL(file));
       setImages((prev) => [...prev, ...newImages]);
+      setImageFiles((prev) => [...prev, ...files]);
     }
   };
 
@@ -56,6 +59,7 @@ const SellProductPage = () => {
   // Remove image
   const removeImage = (index) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Remove video
@@ -95,6 +99,7 @@ const SellProductPage = () => {
       if (imageFiles.length > 0) {
         const newImages = imageFiles.map((file) => URL.createObjectURL(file));
         setImages((prev) => [...prev, ...newImages]);
+        setImageFiles((prev) => [...prev, ...imageFiles]);
       }
 
       if (videoFiles.length > 0 && !videoFile) {
@@ -130,7 +135,6 @@ const SellProductPage = () => {
     try {
       console.log('Current form data:', formData); // Debug log
       // 1. Upload images to Cloudinary
-      const imageFiles = imageInputRef.current?.files ? Array.from(imageInputRef.current.files) : [];
       const imageUrls = [];
       for (const file of imageFiles) {
         const url = await uploadToCloudinary(file, 'image');
@@ -223,6 +227,7 @@ const SellProductPage = () => {
           stock: "",
         });
         setImages([]);
+        setImageFiles([]);
         setVideoUrl("");
         setVideoFile(null);
         setIsSuccess(false);
@@ -241,10 +246,10 @@ const SellProductPage = () => {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
-              <Leaf className="h-6 w-6 text-white" />
+              <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-              Plant Haven
+              Qkart
             </span>
           </div>
 
@@ -345,8 +350,11 @@ const SellProductPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label htmlFor="price" className="text-sm font-medium">
-                      Price ($) <span className="text-red-500">*</span>
+                    <label
+                      htmlFor="price"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Price (₹) <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="price"
@@ -608,7 +616,7 @@ const SellProductPage = () => {
       {/* Simple Footer */}
       <footer className="bg-white py-8 border-t border-green-100 mt-20">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} Plant Haven. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Qkart. All rights reserved.</p>
         </div>
       </footer>
     </div>

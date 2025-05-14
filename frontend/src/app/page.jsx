@@ -195,9 +195,9 @@ export default function Home() {
             <div className="flex justify-between items-center mb-10">
               <div className="flex items-center gap-2">
                 <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full animate-pulse-slow">
-                  <img src="/qkartlogo.png" alt="" />
+                  <img src="/qkartlogo.png" alt="" height={64} width={40} />
                 </div>
-                <span className="text-xl font-bold gradient-text">Plant Haven</span>
+                <span className="text-xl font-bold gradient-text">Qkart</span>
               </div>
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -471,11 +471,9 @@ export default function Home() {
                 </div>
 
                 <div className="absolute -bottom-6 -left-6 bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xl max-w-[180px] sm:max-w-[200px] animate-float hidden sm:block animate-expand glass-effect">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-green-100 p-1 sm:p-2 rounded-full organic-shape-2">
-                      <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                    </div>
-                    <p className="text-xs sm:text-sm font-medium">Free shipping on orders over $50</p>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Truck className="h-5 w-5 text-green-600" />
+                    <p className="text-xs sm:text-sm font-medium">Free shipping on orders over ₹50</p>
                   </div>
                 </div>
 
@@ -637,9 +635,9 @@ export default function Home() {
                     </h3>
                     <div className="flex justify-between items-center mt-3 sm:mt-4">
                       <div>
-                        <p className="font-bold text-lg sm:text-xl">${product.price}</p>
+                        <p className="font-bold text-lg sm:text-xl">₹{product.price}</p>
                         {product.oldPrice && (
-                          <p className="text-xs sm:text-sm text-gray-400 line-through">${product.oldPrice}</p>
+                          <p className="text-xs sm:text-sm text-gray-400 line-through">₹{product.oldPrice}</p>
                         )}
                       </div>
                       <button className="p-2 sm:p-3 bg-green-100 rounded-full text-green-600 hover:bg-green-600 hover:text-white transition-all-300 hover-scale touch-larger-hit">
@@ -718,7 +716,7 @@ export default function Home() {
                 What Our Customers Say
               </h2>
               <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-                Hear from our happy customers about their experience with Plant Haven
+                Hear from our happy customers about their experience with Qkart
               </p>
             </div>
 
@@ -841,7 +839,7 @@ export default function Home() {
             <div className="max-w-3xl mx-auto text-center mb-10 md:mb-16 animate-slide-up">
               <span className="text-green-600 font-medium">Our Promise</span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 gradient-text">
-                Why Choose Plant Haven
+                Why Choose Qkart
               </h2>
               <p className="text-gray-600 text-sm sm:text-base">
                 We're committed to providing the highest quality plants and exceptional service
@@ -893,7 +891,7 @@ export default function Home() {
             <div className="text-center mb-8 md:mb-12">
               <span className="text-green-600 font-medium">Instagram</span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 gradient-text">
-                Follow Us @PlantHaven
+                Follow Us @Qkart
               </h2>
               <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
                 Get inspired by our plant styling ideas and join our community of plant lovers
@@ -1016,7 +1014,7 @@ export default function Home() {
                   <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-1.5 sm:p-2 rounded-full animate-pulse-slow organic-shape-1">
                     <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <span className="text-lg sm:text-xl font-bold gradient-text">Plant Haven</span>
+                  <span className="text-lg sm:text-xl font-bold gradient-text">Qkart</span>
                 </div>
                 <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                   Your one-stop shop for premium plants, trees, and gardening supplies.
@@ -1052,7 +1050,7 @@ export default function Home() {
                   content: [
                     "123 Garden Street",
                     "Greenville, GR 12345",
-                    "Email: info@planthaven.com",
+                    "Email: info@qkart.com",
                     "Phone: (123) 456-7890",
                   ],
                 },
@@ -1098,7 +1096,7 @@ export default function Home() {
             </div>
 
             <div className="mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-green-100 text-center text-gray-500 text-xs sm:text-sm animate-fade-in">
-              <p>© {new Date().getFullYear()} Plant Haven. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} Qkart. All rights reserved.</p>
             </div>
           </div>
         </footer>

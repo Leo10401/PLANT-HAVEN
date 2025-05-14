@@ -178,7 +178,7 @@ export default function ProductDetailPage({ params }) {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
-              <Leaf className="h-6 w-6 text-white" />
+              <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
               Plant Haven
@@ -336,12 +336,12 @@ export default function ProductDetailPage({ params }) {
               <div className="mb-6">
                 {product.discount > 0 ? (
                   <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold">${discountedPrice.toFixed(2)}</span>
-                    <span className="text-lg text-gray-500 line-through">${product.price.toFixed(2)}</span>
+                    <span className="text-3xl font-bold">₹{discountedPrice.toFixed(2)}</span>
+                    <span className="text-lg text-gray-500 line-through">₹{product.price.toFixed(2)}</span>
                     <span className="text-sm text-red-500 font-medium">Save {product.discount}%</span>
                   </div>
                 ) : (
-                  <span className="text-3xl font-bold">${product.price.toFixed(2)}</span>
+                  <span className="text-3xl font-bold">₹{product.price.toFixed(2)}</span>
                 )}
               </div>
 
@@ -407,7 +407,7 @@ export default function ProductDetailPage({ params }) {
                   </div>
                   <div>
                     <h3 className="font-medium text-sm">Free Shipping</h3>
-                    <p className="text-xs text-gray-500">On orders over $50</p>
+                    <p className="text-xs text-gray-500">On orders over ₹50</p>
                   </div>
                 </div>
 
@@ -900,13 +900,11 @@ export default function ProductDetailPage({ params }) {
                     <div>
                       {product.discount > 0 ? (
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-xl">
-                            ${(product.price * (1 - product.discount / 100)).toFixed(2)}
-                          </span>
-                          <span className="text-sm text-gray-500 line-through">${product.price.toFixed(2)}</span>
+                          <span className="font-bold text-xl">₹{(product.price * (1 - product.discount / 100)).toFixed(2)}</span>
+                          <span className="text-sm text-gray-500 line-through">₹{product.price.toFixed(2)}</span>
                         </div>
                       ) : (
-                        <span className="font-bold text-xl">${product.price.toFixed(2)}</span>
+                        <span className="font-bold text-xl">₹{product.price.toFixed(2)}</span>
                       )}
                     </div>
 

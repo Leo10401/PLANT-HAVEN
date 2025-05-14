@@ -309,10 +309,10 @@ export default function Checkout() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
-              <Leaf className="h-6 w-6 text-white" />
+              <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-              Plant Haven
+              Qkart
             </span>
           </Link>
 
@@ -447,11 +447,11 @@ export default function Checkout() {
                       {/* Price */}
                       <div className="text-right">
                         <p className="font-medium text-green-600">
-                          ${((item.product.price * (1 - (item.product.discount || 0) / 100)) * item.quantity).toFixed(2)}
+                          {((item.product.price * (1 - (item.product.discount || 0) / 100)) * item.quantity).toFixed(2)}
                         </p>
                         {item.product.discount > 0 && (
                           <p className="text-xs text-gray-500 line-through">
-                            ${(item.product.price * item.quantity).toFixed(2)}
+                            {(item.product.price * item.quantity).toFixed(2)}
                           </p>
                         )}
                       </div>
@@ -628,20 +628,20 @@ export default function Checkout() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>${orderSummary.subtotal.toFixed(2)}</span>
+                  <span>₹{orderSummary.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{orderSummary.shipping === 0 ? 'Free' : `$${orderSummary.shipping.toFixed(2)}`}</span>
+                  <span>{orderSummary.shipping === 0 ? 'Free' : `₹${orderSummary.shipping.toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax</span>
-                  <span>${orderSummary.tax.toFixed(2)}</span>
+                  <span>₹{orderSummary.tax.toFixed(2)}</span>
                 </div>
                 {orderSummary.promoApplied && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
-                    <span>-${orderSummary.discount.toFixed(2)}</span>
+                    <span>-₹{orderSummary.discount.toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -649,7 +649,7 @@ export default function Checkout() {
                 
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${orderSummary.total.toFixed(2)}</span>
+                  <span>₹{orderSummary.total.toFixed(2)}</span>
                 </div>
               </div>
               
@@ -682,7 +682,7 @@ export default function Checkout() {
                   <div className="bg-green-100 p-1 rounded-full">
                     <Truck className="h-4 w-4 text-green-600" />
                   </div>
-                  <span>Free Shipping on Orders Over $50</span>
+                  <span>Free Shipping on Orders Over ₹50</span>
                 </div>
               </div>
             </div>

@@ -60,7 +60,7 @@ export default function ShopPage() {
     },
     {
       name: "Price Range",
-      options: ["Under $25", "$25-$50", "$50-$100", "Over $100"],
+      options: ["Under ₹25", "₹25-₹50", "₹50-₹100", "Over ₹100"],
     },
   ]
 
@@ -177,10 +177,10 @@ export default function ShopPage() {
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
               <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
-                <Leaf className="h-6 w-6 text-white" />
+                <img src="/qkartlogo.png" alt="" height={64} width={40} />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-                Plant Haven
+                Qkart
               </span>
             </Link>
           </div>
@@ -273,8 +273,8 @@ export default function ShopPage() {
                   className="mb-4"
                 />
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">${priceRange[0]}</span>
-                  <span className="text-sm text-gray-600">${priceRange[1]}</span>
+                  <span className="text-sm text-gray-600">₹{priceRange[0]}</span>
+                  <span className="text-sm text-gray-600">₹{priceRange[1]}</span>
                 </div>
               </div>
 
@@ -327,8 +327,8 @@ export default function ShopPage() {
                       className="mb-4"
                     />
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">${priceRange[0]}</span>
-                      <span className="text-sm text-gray-600">${priceRange[1]}</span>
+                      <span className="text-sm text-gray-600">₹{priceRange[0]}</span>
+                      <span className="text-sm text-gray-600">₹{priceRange[1]}</span>
                     </div>
                   </div>
 
@@ -512,7 +512,7 @@ export default function ShopPage() {
                       <p className="text-gray-600 mt-2 line-clamp-2">{product.description || "No description available"}</p>
 
                       <div className="flex justify-between items-center mt-4">
-                        <span className="font-bold text-xl">${(product.price || 0).toFixed(2)}</span>
+                        <span className="font-bold text-xl">₹{(product.price || 0).toFixed(2)}</span>
 
                         <button
                           className="p-3 bg-green-100 rounded-full text-green-600 hover:bg-green-600 hover:text-white transition-colors"
@@ -556,7 +556,7 @@ export default function ShopPage() {
                       <p className="text-gray-600 mt-2 mb-4">{product.description}</p>
 
                       <div className="flex flex-wrap items-center justify-between gap-4 mt-auto">
-                        <span className="font-bold text-xl">${product.price.toFixed(2)}</span>
+                        <span className="font-bold text-xl">₹{product.price.toFixed(2)}</span>
 
                         <div className="flex gap-3">
                           <Button
@@ -649,7 +649,7 @@ export default function ShopPage() {
       {/* Footer */}
       <footer className="bg-white py-8 border-t border-green-100 mt-20">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} Plant Haven. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Qkart. All rights reserved.</p>
         </div>
       </footer>
     </div>
