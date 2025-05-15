@@ -5,22 +5,22 @@ const auth = require('../middleware/auth');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 
-// Get all products (with optional seller filter)
+// Get all products (public) - only show approved products
 router.get('/', async (req, res) => {
-    try {
-        const { sellerId } = req.query;
-        let query = {};
-        
-        // If sellerId is provided, filter products by seller
-        if (sellerId) {
-            query.seller = sellerId;
-        }
-        
-        const products = await Product.find(query).populate('seller', 'name shopName');
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const filters = { isApproved: true };
+    
+    // Add any other filter parameters from request
+    if (req.query.category) {
+      filters.category = req.query.category;
     }
+    
+    const products = await Product.find(filters).populate('seller', 'name shopName');
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // Get products by category
@@ -34,14 +34,14 @@ router.get('/category/:category', async (req, res) => {
     }
 });
 
-// Get seller's products
+// Get seller's products - shows both approved and unapproved
 router.get('/seller', auth, async (req, res) => {
-    try {
-        const products = await Product.find({ seller: req.user.id });
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const products = await Product.find({ seller: req.userId });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // Create new product
@@ -146,6 +146,88 @@ router.post('/prod', auth, async (req, res) => {
     res.status(201).json(savedProduct);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+});
+
+// Admin route to approve products
+router.put('/approve/:id', auth, async (req, res) => {
+  try {
+    // Check if the user is an admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { 
+        isApproved: true, 
+        approvedAt: Date.now(),
+        approvedBy: req.user._id
+      },
+      { new: true }
+    );
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    res.status(200).json({ 
+      success: true,
+      message: 'Product approved successfully',
+      product 
+    });
+  } catch (error) {
+    console.error('Error approving product:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin route to reject products
+router.put('/reject/:id', auth, async (req, res) => {
+  try {
+    // Check if the user is an admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { 
+        isApproved: false,
+        approvedAt: null,
+        approvedBy: null
+      },
+      { new: true }
+    );
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    res.status(200).json({ 
+      success: true,
+      message: 'Product rejected successfully',
+      product 
+    });
+  } catch (error) {
+    console.error('Error rejecting product:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin route to get all products (including unapproved ones)
+router.get('/admin/products', auth, async (req, res) => {
+  try {
+    // Check if the user is an admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+    }
+    
+    const products = await Product.find().populate('seller', 'name shopName');
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error fetching all products:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 

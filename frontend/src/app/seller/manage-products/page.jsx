@@ -168,6 +168,22 @@ export default function ManageProducts() {
     );
   };
 
+  const getApprovalBadge = (isApproved) => {
+    if (isApproved) {
+      return (
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          Approved
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+          Pending Approval
+        </Badge>
+      );
+    }
+  };
+
   // Filter products
   const filteredProducts = products.filter(product => {
     // Filter by category
@@ -325,7 +341,7 @@ export default function ManageProducts() {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -365,6 +381,33 @@ export default function ManageProducts() {
               </div>
             </div>
           </div>
+
+          {/* New card for approved products */}
+          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Approved Products</p>
+                <p className="text-2xl font-bold">
+                  {products.filter(p => p.isApproved).length}
+                </p>
+              </div>
+              <div className="bg-green-50 p-3 rounded-lg">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-6 w-6 text-green-600"
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Products Table */}
@@ -376,6 +419,7 @@ export default function ManageProducts() {
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead> {/* New column for approval status */}
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Added On</TableHead>
@@ -406,6 +450,7 @@ export default function ManageProducts() {
                         </div>
                       </TableCell>
                       <TableCell>{getCategoryBadge(product.category)}</TableCell>
+                      <TableCell>{getApprovalBadge(product.isApproved)}</TableCell> {/* New status cell */}
                       <TableCell>${product.price.toFixed(2)}</TableCell>
                       <TableCell>
                         <span className={`font-medium ${product.stock < 5 ? 'text-red-600' : 'text-gray-900'}`}>

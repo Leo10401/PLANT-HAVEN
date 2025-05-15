@@ -22,7 +22,8 @@ import {
   Edit,
   Filter,
   ChevronDown,
-  Leaf
+  Leaf,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,7 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [approvalFilter, setApprovalFilter] = useState('all');
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -152,9 +154,73 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleApproveProduct = async (productId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      
+      const response = await fetch(`http://localhost:5000/prod/approve/${productId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': formattedToken
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast.success(data.message || 'Product approved successfully');
+        fetchProducts(); // Refresh the product list
+      } else {
+        toast.error(data.message || 'Failed to approve product');
+      }
+    } catch (error) {
+      console.error('Error approving product:', error);
+      toast.error('An error occurred while approving the product');
+    }
+  };
+
+  const handleRejectProduct = async (productId) => {
+    if (!confirm('Are you sure you want to reject this product?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      
+      const response = await fetch(`http://localhost:5000/prod/reject/${productId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': formattedToken
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast.success(data.message || 'Product rejected successfully');
+        fetchProducts(); // Refresh the product list
+      } else {
+        toast.error(data.message || 'Failed to reject product');
+      }
+    } catch (error) {
+      console.error('Error rejecting product:', error);
+      toast.error('An error occurred while rejecting the product');
+    }
+  };
+
   // Filter products
   const filteredProducts = products.filter(product => {
-    // Filter by stock status
+    // Filter by approval status
+    if (approvalFilter === 'approved' && !product.isApproved) {
+      return false;
+    }
+    if (approvalFilter === 'pending' && product.isApproved) {
+      return false;
+    }
+    
+    // Your existing filters
     if (filter === 'in-stock' && product.stock <= 0) {
       return false;
     }
@@ -162,12 +228,10 @@ export default function AdminProductsPage() {
       return false;
     }
     
-    // Filter by category
     if (categoryFilter !== 'all' && product.category !== categoryFilter) {
       return false;
     }
     
-    // Search by name or description
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -341,6 +405,26 @@ export default function AdminProductsPage() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Approval
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setApprovalFilter('all')}>
+                  <span className={approvalFilter === 'all' ? 'text-green-600 font-medium' : ''}>All Products</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setApprovalFilter('approved')}>
+                  <span className={approvalFilter === 'approved' ? 'text-green-600 font-medium' : ''}>Approved</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setApprovalFilter('pending')}>
+                  <span className={approvalFilter === 'pending' ? 'text-green-600 font-medium' : ''}>Pending Approval</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Products table */}
@@ -353,6 +437,7 @@ export default function AdminProductsPage() {
                   <TableHead>Price</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Seller</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -402,22 +487,47 @@ export default function AdminProductsPage() {
                           <span className="text-sm text-gray-500">No seller info</span>
                         )}
                       </TableCell>
+                      <TableCell>
+                        {product.isApproved ? (
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            Approved
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                            Pending Approval
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            onClick={() => router.push(`/admin/products/${product._id}`)}
+                            onClick={() => router.push(`/product/${product._id}`)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button 
+                          
+                          {!product.isApproved && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-green-600 hover:text-green-800 hover:bg-green-50"
+                              onClick={() => handleApproveProduct(product._id)}
+                              title="Approve Product"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          {/* <Button 
                             variant="ghost" 
                             size="icon"
                             onClick={() => router.push(`/admin/products/${product._id}/edit`)}
                           >
                             <Edit className="h-4 w-4" />
-                          </Button>
+                          </Button> */}
+                          
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -432,7 +542,7 @@ export default function AdminProductsPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       {searchQuery || filter !== 'all' || categoryFilter !== 'all' ? 'No products match your search criteria.' : 'No products found.'}
                     </TableCell>
                   </TableRow>
@@ -444,4 +554,4 @@ export default function AdminProductsPage() {
       </div>
     </div>
   );
-} 
+}

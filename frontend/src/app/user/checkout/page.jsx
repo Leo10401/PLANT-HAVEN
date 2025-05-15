@@ -39,7 +39,7 @@ export default function Checkout() {
       country: '',
       phoneNumber: ''
     },
-    paymentMethod: 'creditCard'
+    paymentMethod: 'razorpay'
   });
   const [userId, setUserId] = useState(null);
 
@@ -726,7 +726,7 @@ export default function Checkout() {
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-green-500 transition-colors">
+                  {/* <div className="flex items-center p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-green-500 transition-colors">
                     <input
                       type="radio"
                       id="creditCard"
@@ -740,7 +740,7 @@ export default function Checkout() {
                       <CreditCard className="h-5 w-5 mr-2 text-gray-600" />
                       <span>Credit Card</span>
                     </label>
-                  </div>
+                  </div> */}
                   
                   <div className="flex items-center p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-green-500 transition-colors">
                     <input

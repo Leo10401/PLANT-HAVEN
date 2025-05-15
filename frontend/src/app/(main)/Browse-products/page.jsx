@@ -18,7 +18,7 @@ export default function ShopPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated } = useAuth()
-  const { addToCart: addToCartContext } = useCart()
+  const { addToCart: addToCartContext, items: cartItems } = useCart()
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilters, setActiveFilters] = useState([])
@@ -53,8 +53,12 @@ export default function ShopPage() {
           throw new Error(`Failed to fetch products: ${response.statusText}`);
         }
         const data = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
+        
+        // Filter to only show approved products
+        const approvedProducts = data.filter(product => product.isApproved === true);
+        
+        setProducts(approvedProducts);
+        setFilteredProducts(approvedProducts);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching products:', err);
@@ -71,12 +75,15 @@ export default function ShopPage() {
     {
       name: "Category",
       options: ["indoor", "outdoor", "succulents", "flowering", "trees", "herbs", "rare"],
-    },
-    {
-      name: "Price Range",
-      options: ["Under ₹25", "₹25-₹50", "₹50-₹100", "Over ₹100"],
-    },
-  ]
+    }
+  ];
+
+  const priceRangeOptions = [
+    { label: "Under ₹100", min: 0, max: 100 },
+    { label: "₹100-₹250", min: 100, max: 250 },
+    { label: "₹250-₹500", min: 250, max: 500 },
+    { label: "Over ₹500", min: 500, max: 1000 }
+  ];
 
   // Apply filters
   useEffect(() => {
@@ -94,14 +101,18 @@ export default function ShopPage() {
     // Apply category filters
     if (activeFilters.length > 0) {
       result = result.filter((product) => {
+        // Check if any of the active filters match this product's category
         return activeFilters.some(
-          (filter) => product.category.includes(filter)
+          (filter) => product.category === filter
         )
       })
     }
 
     // Apply price filter
-    result = result.filter((product) => product.price >= priceRange[0] && product.price <= priceRange[1])
+    result = result.filter((product) => 
+      product.price >= priceRange[0] && 
+      product.price <= priceRange[1]
+    )
 
     // Apply sorting
     switch (sortOption) {
@@ -142,13 +153,47 @@ export default function ShopPage() {
   }
 
   // Add to cart function
-  const addToCart = (productId, event) => {
+  const addToCart = async (productId, event) => {
     if (event) {
       event.preventDefault()
       event.stopPropagation()
     }
-    console.log(`Added product ${productId} to cart`)
-    // Here you would add the actual cart functionality
+    
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to your cart")
+      router.push("/Login")
+      return
+    }
+
+    // If product is already in cart, show notification instead of making API call
+    if (isProductInCart(productId)) {
+      toast.success("This item is already in your cart")
+      return
+    }
+
+    try {
+      // Find the product details from the products array
+      const productToAdd = products.find(product => product._id === productId)
+      if (!productToAdd) {
+        toast.error("Product not found")
+        return
+      }
+
+      // Call the context function to add the item to cart
+      await addToCartContext({
+        productId,
+        quantity: 1,
+        name: productToAdd.name,
+        price: productToAdd.price,
+        image: productToAdd.images?.[0] || "/placeholder.svg"
+      })
+      
+      toast.success(`${productToAdd.name} added to cart!`)
+    } catch (error) {
+      console.error("Failed to add to cart:", error)
+      toast.error("Failed to add item to cart")
+    }
   }
 
   // Toggle wishlist function
@@ -159,6 +204,11 @@ export default function ShopPage() {
     }
     console.log(`Toggled wishlist for product ${productId}`)
     // Here you would add the actual wishlist functionality
+  }
+
+  // Add this function after your other utility functions
+  const isProductInCart = (productId) => {
+    return cartItems?.some(item => item.productId === productId);
   }
 
   if (loading) {
@@ -193,9 +243,10 @@ export default function ShopPage() {
               <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
                 <img src="/qkartlogo.png" alt="" height={64} width={40} />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-                Qkart
-              </span>
+              <div className="flex flex-col">
+                <span className="text-lg sm:text-4xl font-bold text-green-600">Qkart</span>
+                <span className="text-[10px]">Tiny Hands, Green Lands</span>
+              </div>
             </Link>
           </div>
 
@@ -270,30 +321,17 @@ export default function ShopPage() {
                 )}
               </div>
 
-              {/* Price Range */}
-              <div className="mb-6 border-b border-gray-100 pb-6">
-                <h3 className="font-medium mb-4">Price Range</h3>
-                <Slider
-                  defaultValue={[0, 1000]}
-                  max={1000}
-                  step={1}
-                  value={priceRange}
-                  onValueChange={setPriceRange}
-                  className="mb-4"
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">₹{priceRange[0]}</span>
-                  <span className="text-sm text-gray-600">₹{priceRange[1]}</span>
-                </div>
-              </div>
-
               {/* Filter Categories */}
               {filterCategories.map((category, index) => (
                 <div key={index} className="mb-6 border-b border-gray-100 pb-6 last:border-0 last:pb-0 last:mb-0">
                   <h3 className="font-medium mb-4">{category.name}</h3>
                   <div className="space-y-2">
                     {category.options.map((option, optionIndex) => (
-                      <label key={optionIndex} className="flex items-center gap-2 cursor-pointer group">
+                      <label 
+                        key={optionIndex} 
+                        className="flex items-center gap-2 cursor-pointer group"
+                        onClick={() => toggleFilter(option)}
+                      >
                         <div
                           className={`h-4 w-4 rounded border ${
                             activeFilters.includes(option)
@@ -309,6 +347,49 @@ export default function ShopPage() {
                   </div>
                 </div>
               ))}
+
+              {/* Price Range */}
+              <div className="mb-6 border-b border-gray-100 pb-6">
+                <h3 className="font-medium mb-4">Price Range</h3>
+                <div className="space-y-2">
+                  {priceRangeOptions.map((range, index) => (
+                    <label 
+                      key={index} 
+                      className="flex items-center gap-2 cursor-pointer group"
+                      onClick={() => setPriceRange([range.min, range.max])}
+                    >
+                      <div
+                        className={`h-4 w-4 rounded border ${
+                          priceRange[0] === range.min && priceRange[1] === range.max
+                            ? "bg-green-600 border-green-600"
+                            : "border-gray-300 group-hover:border-green-400"
+                        } flex items-center justify-center transition-colors`}
+                      >
+                        {priceRange[0] === range.min && priceRange[1] === range.max && 
+                          <Check className="h-3 w-3 text-white" />
+                        }
+                      </div>
+                      <span className="text-sm">{range.label}</span>
+                    </label>
+                  ))}
+                </div>
+                
+                {/* Keep your existing slider */}
+                <div className="mt-4">
+                  <Slider
+                    defaultValue={[0, 1000]}
+                    max={1000}
+                    step={1}
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    className="mb-4"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">₹{priceRange[0]}</span>
+                    <span className="text-sm text-gray-600">₹{priceRange[1]}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </aside>
 
@@ -327,17 +408,19 @@ export default function ShopPage() {
                   {/* Price Range */}
                   <div className="mb-6 border-b border-gray-100 pb-6">
                     <h3 className="font-medium mb-4">Price Range</h3>
-                    <Slider
-                      defaultValue={[0, 1000]}
-                      max={1000}
-                      step={1}
-                      value={priceRange}
-                      onValueChange={setPriceRange}
-                      className="mb-4"
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">₹{priceRange[0]}</span>
-                      <span className="text-sm text-gray-600">₹{priceRange[1]}</span>
+                    <div className="space-y-3">
+                      {priceRangeOptions.map((range, index) => (
+                        <label key={index} className="flex items-center gap-2 cursor-pointer">
+                          <div
+                            className={`h-5 w-5 rounded border ${
+                              priceRange[0] === range.min && priceRange[1] === range.max ? "bg-green-600 border-green-600" : "border-gray-300"
+                            } flex items-center justify-center`}
+                          >
+                            {priceRange[0] === range.min && priceRange[1] === range.max && <Check className="h-3 w-3 text-white" />}
+                          </div>
+                          <span>{range.label}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
@@ -522,13 +605,8 @@ export default function ShopPage() {
 
                       <div className="flex justify-between items-center mt-4">
                         <span className="font-bold text-xl">₹{(product.price || 0).toFixed(2)}</span>
-
-                        <button
-                          className="p-3 bg-green-100 rounded-full text-green-600 hover:bg-green-600 hover:text-white transition-colors"
-                          onClick={(e) => addToCart(product._id, e)}
-                        >
-                          <ShoppingBag className="h-5 w-5" />
-                        </button>
+                        
+                        {/* Add to cart button removed */}
                       </div>
                     </div>
                   </Link>
@@ -575,14 +653,6 @@ export default function ShopPage() {
                           >
                             <Heart className="h-4 w-4 mr-2" />
                             Wishlist
-                          </Button>
-
-                          <Button
-                            className="bg-gradient-to-r from-green-600 to-emerald-500"
-                            onClick={(e) => addToCart(product._id, e)}
-                          >
-                            <ShoppingBag className="h-4 w-4 mr-2" />
-                            Add to Cart
                           </Button>
                         </div>
                       </div>
@@ -645,7 +715,7 @@ export default function ShopPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <polyline points="9 18 15 12 9 6" />
+                      <polyline points="9 6 15 12 9 18" />
                     </svg>
                   </Button>
                 </div>
@@ -654,13 +724,6 @@ export default function ShopPage() {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white py-8 border-t border-green-100 mt-20">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>© {new Date().getFullYear()} Qkart. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   )
 }

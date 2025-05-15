@@ -37,6 +37,17 @@ const productSchema = new mongoose.Schema({
         ref: 'Seller',
         required: true
     },
+    isApproved: {
+        type: Boolean,
+        default: false
+    },
+    approvedAt: {
+        type: Date
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     createdAt: {
         type: Date,
         default: Date.now

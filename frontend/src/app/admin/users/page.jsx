@@ -274,10 +274,10 @@ export default function AdminUsersPage() {
         <main className="ml-64 flex-1 p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold">User Management</h1>
-            <Button>
+            {/* <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add User
-            </Button>
+            </Button> */}
           </div>
 
           {/* Search and filters */}

@@ -327,10 +327,10 @@ export default function AdminDashboard() {
         <main className="ml-64 flex-1 p-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-            <Button variant="outline">
+            {/* <Button variant="outline">
               <BarChart3 className="mr-2 h-4 w-4" />
               Generate Reports
-            </Button>
+            </Button> */}
           </div>
 
           {/* Stats overview */}
@@ -422,11 +422,11 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
-                <div className="mt-4">
+                {/* <div className="mt-4">
                   <Button variant="outline" className="w-full">
                     View All Orders
                   </Button>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 
@@ -465,11 +465,11 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
-                <div className="mt-4">
+                {/* <div className="mt-4">
                   <Button variant="outline" className="w-full">
                     View All Products
                   </Button>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           </div>
@@ -482,10 +482,10 @@ export default function AdminDashboard() {
                   <CardTitle>Recent Users</CardTitle>
                   <CardDescription>Latest users and sellers who joined the platform</CardDescription>
                 </div>
-                <Button>
+                {/* <Button>
                   <Plus className="mr-2 h-4 w-4" />
                   Add User
-                </Button>
+                </Button> */}
               </div>
             </CardHeader>
             <CardContent>
@@ -529,11 +529,11 @@ export default function AdminDashboard() {
                   ))}
                 </TableBody>
               </Table>
-              <div className="mt-4">
+              {/* <div className="mt-4">
                 <Button variant="outline" className="w-full">
                   View All Users
                 </Button>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </main>

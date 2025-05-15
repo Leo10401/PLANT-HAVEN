@@ -377,14 +377,14 @@ export default function AdminSellersPage() {
                       <TableCell>{new Date(seller.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button 
+                          {/* <Button 
                             variant="ghost" 
                             size="icon"
                             onClick={() => router.push(`/admin/sellers/${seller._id}`)}
                           >
                             <Eye className="h-4 w-4" />
-                          </Button>
-                          {seller.status === 'active' ? (
+                          </Button> */}
+                          {/* {seller.status === 'active' ? (
                             <Button 
                               variant="ghost" 
                               size="icon"
@@ -404,7 +404,7 @@ export default function AdminSellersPage() {
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
-                          )}
+                          )} */}
                           <Button 
                             variant="ghost" 
                             size="icon" 

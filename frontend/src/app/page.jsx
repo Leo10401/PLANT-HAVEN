@@ -159,7 +159,7 @@ export default function Home() {
         setIsAvatarDropdownOpen(false)
       }
     }
-    
+
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
@@ -199,9 +199,8 @@ export default function Home() {
 
         {/* Mobile Menu - Improved accessibility */}
         <div
-          className={`fixed inset-0 bg-white z-50 transition-all duration-500 ${
-            isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-          }`}
+          className={`fixed inset-0 bg-white z-50 transition-all duration-500 ${isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
@@ -209,10 +208,10 @@ export default function Home() {
           <div className="container mx-auto px-4 py-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-10">
               <div className="flex items-center gap-2">
-                <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full animate-pulse-slow">
+                <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
                   <img src="/qkartlogo.png" alt="" height={64} width={40} />
                 </div>
-                <span className="text-xl font-bold gradient-text">Qkart</span>
+                <span className="text-xl font-bold text-green-600">Qkart</span>
               </div>
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -275,9 +274,8 @@ export default function Home() {
 
         {/* Header with glass effect - Improved performance */}
         <header
-          className={`sticky top-0 z-40 transition-all duration-300 ${
-            scrollY > 50 ? "backdrop-blur-md bg-white/70 border-b border-green-100 py-3" : "bg-transparent py-5"
-          }`}
+          className={`sticky top-0 z-40 transition-all duration-300 ${scrollY > 50 ? "backdrop-blur-md bg-white/70 border-b border-green-100 py-3" : "bg-transparent py-5"
+            }`}
           style={{
             willChange: 'transform, opacity',
             transform: `translateZ(0)`,
@@ -289,7 +287,11 @@ export default function Home() {
               <div className="bg-gradient-to-br from-green-400 to-emerald-200 p-2 rounded-full animate-pulse-slow organic-shape-1">
                 <img src="/qkartlogo.png" alt="" height={64} width={40} />
               </div>
-              <span className="text-lg sm:text-xl font-bold gradient-text">Qkart</span>
+              <div className="flex flex-col">
+
+                <span className="text-lg sm:text-4xl font-bold text-green-600">Qkart</span>
+                <span className="text-[10px]">Tiny Hands, Green Lands</span>
+              </div>
             </div>
 
             <nav className="hidden md:flex gap-8" ref={navItemRef} aria-label="Main navigation">
@@ -297,12 +299,12 @@ export default function Home() {
                 { name: "Home", href: "/" },
                 { name: "Shop", href: "/Browse-products" },
                 { name: "Categories", href: "/Categories" },
-                { name: "About", href: "/About" },
-                { name: "Contact", href: "/Contact" }
+                { name: "About", href: "/about" },
+                { name: "Contact", href: "/contact" }
               ].map((item, index) => (
-                <Link 
-                  key={item.name} 
-                  href={item.href} 
+                <Link
+                  key={item.name}
+                  href={item.href}
                   className="text-sm font-medium relative group nav-item animated-underline"
                   style={{
                     transitionDelay: prefersReducedMotion ? 0 : `${index * 50}ms`,
@@ -332,30 +334,29 @@ export default function Home() {
                       <User className="h-5 w-5 text-green-600" />
                     </div>
                   </button>
-                  <div 
-                    className={`absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ${
-                      isAvatarDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                    }`}
+                  <div
+                    className={`absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ${isAvatarDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                      }`}
                   >
-                    <Link 
-                      href="/user/dashboard" 
+                    <Link
+                      href="/user/dashboard"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
                     >
                       Dashboard
                     </Link>
-                    <Link 
-                      href="/user/all-orders" 
+                    <Link
+                      href="/user/all-orders"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
                     >
                       My Orders
                     </Link>
-                    <Link 
-                      href="/user/profile" 
+                    <Link
+                      href="/user/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
                     >
                       Profile
                     </Link>
-                    <button 
+                    <button
                       onClick={logout}
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
@@ -405,30 +406,28 @@ export default function Home() {
 
             <div className="container mx-auto px-4 py-10 md:py-20 flex flex-col md:flex-row items-center relative z-10">
               <div className="w-full md:w-1/2 space-y-6 md:space-y-8 md:pr-12 reveal-on-scroll text-center md:text-left">
-                <div className="inline-block px-4 py-1 rounded-full glass-effect text-green-800 text-xs sm:text-sm font-medium mb-2 animate-pulse-slow">
+                <div className="inline-block px-4 py-1 rounded-full glass-effect text-green-800 text-xs sm:text-sm font-medium mb-2">
                   🌱 Eco-friendly & Sustainable
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight animate-slide-up">
-                  Bring <span className="gradient-text">Nature's Beauty</span> Into Your Home
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+                  Bring <span className="text-green-600">Nature's Beauty</span> Into Your Home
                 </h1>
-                <p className="text-base sm:text-lg text-gray-600 max-w-md mx-auto md:mx-0 animate-slide-up delay-200">
+                <p className="text-base sm:text-lg text-gray-600 max-w-md mx-auto md:mx-0 delay-200">
                   Discover our curated collection of premium plants and trees to transform your space into a lush
                   paradise.
                 </p>
                 <div className="flex flex-wrap gap-4 pt-4 animate-slide-up delay-300 justify-center md:justify-start">
-                  <MagneticElement strength={20}>
-                    <Button
-                      ref={shopNowBtnRef}
-                      onClick={() => router.push('/Browse-products')}
-                      className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white rounded-full px-6 sm:px-8 py-5 sm:py-6 shadow-lg shadow-green-200 transition-all-500 hover:shadow-xl hover:shadow-green-300 button-hover-effect magnetic-button touch-larger-hit touch-active"
-                      style={{
-                        transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
-                      }}
-                    >
-                      Shop Now
-                      <ArrowRight className="ml-2 h-4 w-4 transition-transform-300 group-hover:translate-x-1" />
-                    </Button>
-                  </MagneticElement>
+                  <Button
+                    ref={shopNowBtnRef}
+                    onClick={() => router.push('/Browse-products')}
+                    className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white rounded-full px-6 sm:px-8 py-5 sm:py-6 shadow-lg shadow-green-200 transition-all-500 hover:shadow-xl hover:shadow-green-300"
+                    style={{
+                      transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                    }}
+                  >
+                    Shop Now
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform-300 group-hover:translate-x-1" />
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => router.push('/Categories')}
@@ -441,39 +440,6 @@ export default function Home() {
                   </Button>
                 </div>
 
-                <div className="flex items-center gap-4 pt-6 justify-center md:justify-start">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white bg-green-100 overflow-hidden"
-                        style={{ zIndex: 5 - i }}
-                      >
-                        <Image
-                          src={`/placeholder.svg?height=50&width=50`}
-                          alt={`Customer ${i}`}
-                          width={32}
-                          height={32}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg
-                          key={star}
-                          className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-600">From 2,000+ happy customers</p>
-                  </div>
-                </div>
               </div>
               <div className="w-full md:w-1/2 mt-12 md:mt-0 relative reveal-on-scroll">
                 <div className="absolute -top-10 -left-10 w-20 h-20 bg-green-100 rounded-full blur-xl animate-pulse-slow"></div>
@@ -482,61 +448,20 @@ export default function Home() {
                   style={{ animationDelay: "1s" }}
                 ></div>
 
-                <div className="relative h-[300px] sm:h-[400px] w-full md:h-[500px] rounded-xl md:rounded-2xl overflow-hidden shadow-lg border-2 border-white"
-                  style={{
-                    background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
-                  }}
-                >
-                  <div className="absolute -right-4 -top-4 w-20 h-20 bg-green-400/20 rounded-full blur-md"></div>
-                  <div className="absolute -left-4 -bottom-4 w-16 h-16 bg-emerald-400/20 rounded-full blur-md"></div>
-                  
-                  <div className="relative h-full w-full p-3 md:p-5">
-                    <div className="h-full w-full rounded-lg md:rounded-xl overflow-hidden border-4 border-white shadow-inner relative">
-                      <Image
-                        src="/young.webp"
-                        alt="Beautiful plants and trees"
-                        fill
-                        className="object-cover"
-                        priority
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                    </div>
-                  </div>
-                  
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-green-800 shadow-sm">
-                    Premium Collection
-                  </div>
-                </div>
 
-                <div className="absolute -bottom-6 -left-6 bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xl max-w-[180px] sm:max-w-[200px] animate-float hidden sm:block animate-expand glass-effect">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Truck className="h-5 w-5 text-green-600" />
-                    <p className="text-xs sm:text-sm font-medium">Free shipping on orders over ₹50</p>
-                  </div>
-                </div>
+                <img className="w-full" src="https://static.vecteezy.com/system/resources/thumbnails/056/680/936/small_2x/indoor-garden-display-with-various-lush-plants-png.png" alt="" />
 
-                <div
-                  className="absolute top-10 right-0 bg-white p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-lg animate-float-alt hidden sm:block animate-expand glass-effect"
-                  style={{ animationDelay: "0.5s" }}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="bg-green-100 p-1 sm:p-2 rounded-full organic-shape-1">
-                      <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
-                    </div>
-                    <p className="text-xs font-medium">Quality Guaranteed</p>
-                  </div>
-                </div>
+
               </div>
             </div>
 
-            <div className="scroll-indicator hidden md:block"></div>
           </section>
 
           {/* Plant Care Tips Section */}
           <section className="py-12 md:py-20 container mx-auto px-4 reveal-on-scroll">
             <div className="text-center mb-10 md:mb-16">
               <span className="text-green-600 font-medium">Plant Care</span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 gradient-text">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 text-green-600">
                 Essential Care Tips
               </h2>
               <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
@@ -598,7 +523,7 @@ export default function Home() {
             <div className="container mx-auto px-4 relative z-10">
               <div className="text-center mb-10 md:mb-16">
                 <span className="text-green-600 font-medium">Collections</span>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 gradient-text">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 text-green-600">
                   Shop by Category
                 </h2>
                 <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
@@ -637,7 +562,7 @@ export default function Home() {
                   </Link>
                 ))}
               </div>
-              
+
               <div className="text-center mt-8">
                 <Link href="/(main)/Categories">
                   <Button className="bg-white border-2 border-green-200 text-green-700 hover:bg-green-50 rounded-full px-6 sm:px-8 py-5 sm:py-6 transition-all-300 button-hover-effect touch-larger-hit touch-active">
@@ -653,7 +578,7 @@ export default function Home() {
           <section className="py-12 md:py-20 container mx-auto px-4 reveal-on-scroll">
             <div className="text-center mb-10 md:mb-16">
               <span className="text-green-600 font-medium">Testimonials</span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 gradient-text">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 text-green-600">
                 What Our Customers Say
               </h2>
               <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
@@ -746,9 +671,8 @@ export default function Home() {
                     <button
                       key={index}
                       onClick={() => setCurrentTestimonial(index)}
-                      className={`w-2 h-2 rounded-full ${
-                        currentTestimonial === index ? "bg-green-600" : "bg-gray-300"
-                      }`}
+                      className={`w-2 h-2 rounded-full ${currentTestimonial === index ? "bg-green-600" : "bg-gray-300"
+                        }`}
                       aria-label={`Go to testimonial ${index + 1}`}
                     />
                   ))}
@@ -779,7 +703,7 @@ export default function Home() {
           <section className="py-12 md:py-20 container mx-auto px-4 reveal-on-scroll" ref={benefitItemRef}>
             <div className="max-w-3xl mx-auto text-center mb-10 md:mb-16 animate-slide-up">
               <span className="text-green-600 font-medium">Our Promise</span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 gradient-text">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 text-green-600">
                 Why Choose Qkart
               </h2>
               <p className="text-gray-600 text-sm sm:text-base">
@@ -827,47 +751,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Instagram Feed Section - Responsive Grid */}
-          <section className="py-12 md:py-20 container mx-auto px-4 reveal-on-scroll">
-            <div className="text-center mb-8 md:mb-12">
-              <span className="text-green-600 font-medium">Instagram</span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3 md:mb-4 gradient-text">
-                Follow Us @Qkart
-              </h2>
-              <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-                Get inspired by our plant styling ideas and join our community of plant lovers
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <a
-                  href="#"
-                  key={index}
-                  className="relative group overflow-hidden rounded-lg sm:rounded-xl aspect-square spotlight"
-                >
-                  <Image
-                    src={`/placeholder.svg?height=300&width=300`}
-                    alt={`Instagram post ${index + 1}`}
-                    fill
-                    className="object-cover transition-transform-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  </div>
-                </a>
-              ))}
-            </div>
-
-            <div className="mt-6 sm:mt-10 text-center">
-              <a
-                href="#"
-                className="inline-flex items-center text-green-600 font-medium hover:text-green-700 animated-underline text-sm sm:text-base"
-              >
-                View More on Instagram
-                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-              </a>
-            </div>
-          </section>
 
           {/* Newsletter with creative design */}
           <section className="py-12 md:py-20 relative overflow-hidden reveal-on-scroll">
@@ -899,12 +782,12 @@ export default function Home() {
             ></div>
 
             <div className="container mx-auto px-4 relative z-10">
-              <div className="max-w-xl mx-auto bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 shadow-2xl animate-fade-in tilt-effect organic-shape-1">
+              <div className="max-w-xl mx-auto bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 shadow-2xl animate-fade-in">
                 <div className="text-center mb-6 sm:mb-8">
                   <span className="inline-block p-2 sm:p-3 bg-green-100 rounded-full mb-3 sm:mb-4 animate-pulse-slow organic-shape-2">
                     <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                   </span>
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 animate-slide-up gradient-text">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 animate-slide-up text-green-600">
                     Join Our Green Community
                   </h2>
                   <p className="text-gray-600 animate-slide-up delay-100 text-sm sm:text-base">
@@ -954,7 +837,7 @@ export default function Home() {
                   <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-1.5 sm:p-2 rounded-full animate-pulse-slow organic-shape-1">
                     <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <span className="text-lg sm:text-xl font-bold gradient-text">Qkart</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-600">Qkart</span>
                 </div>
                 <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                   Your one-stop shop for premium plants, trees, and gardening supplies.

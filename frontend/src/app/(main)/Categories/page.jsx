@@ -4,13 +4,13 @@ import React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { 
-  Leaf, 
-  Search, 
-  Heart, 
-  PanelTop, 
-  Sun, 
-  Flower2, 
+import {
+  Leaf,
+  Search,
+  Heart,
+  PanelTop,
+  Sun,
+  Flower2,
   Zap,
   ArrowRight
 } from "lucide-react"
@@ -107,11 +107,11 @@ export default function CategoriesPage() {
   ]
 
   // Filter categories based on search
-  const filteredCategories = searchQuery 
-    ? categories.filter(category => 
-        category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category.description.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const filteredCategories = searchQuery
+    ? categories.filter(category =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : categories
 
   return (
@@ -123,9 +123,10 @@ export default function CategoriesPage() {
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
               <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-              Qkart
-            </span>
+            <div className="flex flex-col">
+              <span className="text-lg sm:text-4xl font-bold text-green-600">Qkart</span>
+              <span className="text-[10px]">Tiny Hands, Green Lands</span>
+            </div>
           </Link>
 
           <div className="hidden md:flex items-center gap-4">
@@ -174,7 +175,7 @@ export default function CategoriesPage() {
             className="absolute bottom-[20%] left-[10%] w-20 md:w-40 h-20 md:h-40 rounded-full bg-white/10 blur-3xl"
           ></div>
         </div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-2xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-4">Plant Categories</h1>
@@ -205,22 +206,22 @@ export default function CategoriesPage() {
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                
+
                 {/* Category Info */}
                 <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 z-20">
                   <div className={`bg-gradient-to-r ${category.color} p-3 rounded-xl inline-block mb-3 shadow-lg transform transition-transform duration-300 group-hover:translate-y-[-5px]`}>
                     {category.icon}
                   </div>
-                  
+
                   <h3 className="text-white text-xl sm:text-2xl font-bold mb-2 transform transition-transform duration-300 group-hover:translate-y-[-5px]">
                     {category.name}
                     <span className="text-sm font-normal ml-2 text-white/70">({category.count})</span>
                   </h3>
-                  
+
                   <p className="text-white/80 text-sm mb-4 line-clamp-2 transform transition-transform duration-300 group-hover:translate-y-[-5px]">
                     {category.description}
                   </p>
-                  
+
                   <span className="inline-flex items-center text-sm text-white/80 group-hover:text-white transition-colors duration-300">
                     Explore Category
                     <ArrowRight className="ml-2 h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1" />
@@ -238,8 +239,8 @@ export default function CategoriesPage() {
             <p className="text-gray-600 mb-6">
               We couldn't find any categories matching your search. Try a different search term.
             </p>
-            <Button 
-              onClick={() => setSearchQuery("")} 
+            <Button
+              onClick={() => setSearchQuery("")}
               className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600"
             >
               Clear Search
@@ -257,7 +258,7 @@ export default function CategoriesPage() {
               Different plant categories require different care. Browse our categories to learn specific care tips for each type of plant.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all-300 hover-lift">
               <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-4">
@@ -265,7 +266,7 @@ export default function CategoriesPage() {
               </div>
               <h3 className="text-lg font-bold mb-2">Indoor Plants</h3>
               <p className="text-gray-600 mb-4">Most indoor plants prefer bright, indirect light and moderate watering. Keep humidity levels balanced.</p>
-              <Link 
+              <Link
                 href="/Browse-products?category=indoor"
                 className="text-green-600 font-medium flex items-center hover:text-green-700"
               >
@@ -273,14 +274,14 @@ export default function CategoriesPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all-300 hover-lift">
               <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mb-4">
                 <Sun className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-lg font-bold mb-2">Outdoor Plants</h3>
               <p className="text-gray-600 mb-4">Outdoor plants typically need more direct sunlight and regular watering, especially during hot seasons.</p>
-              <Link 
+              <Link
                 href="/Browse-products?category=outdoor"
                 className="text-green-600 font-medium flex items-center hover:text-green-700"
               >
@@ -288,14 +289,14 @@ export default function CategoriesPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all-300 hover-lift">
               <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center mb-4">
                 <Leaf className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-lg font-bold mb-2">Succulents</h3>
               <p className="text-gray-600 mb-4">Succulents need infrequent watering and plenty of light. Let the soil dry completely between waterings.</p>
-              <Link 
+              <Link
                 href="/Browse-products?category=succulents"
                 className="text-green-600 font-medium flex items-center hover:text-green-700"
               >
@@ -303,14 +304,14 @@ export default function CategoriesPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all-300 hover-lift">
               <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center mb-4">
                 <Flower2 className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-lg font-bold mb-2">Flowering Plants</h3>
               <p className="text-gray-600 mb-4">Flowering plants often need more fertilizer and consistent moisture to produce beautiful blooms.</p>
-              <Link 
+              <Link
                 href="/Browse-products?category=flowering"
                 className="text-green-600 font-medium flex items-center hover:text-green-700"
               >
@@ -334,7 +335,7 @@ export default function CategoriesPage() {
               Subscribe to our newsletter to receive care tips specific to your favorite plant categories.
             </p>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-3">
             <Input
               type="email"
@@ -345,7 +346,7 @@ export default function CategoriesPage() {
               Subscribe
             </Button>
           </div>
-          
+
           <p className="text-xs text-gray-500 text-center mt-4">
             By subscribing, you agree to receive marketing emails. You can unsubscribe at any time.
           </p>

@@ -278,7 +278,7 @@ export default function UserOrders() {
             <Link href="/" className="text-sm text-gray-600 hover:text-green-600 transition-colors">
               Home
             </Link>
-            <Link href="/shop" className="text-sm text-gray-600 hover:text-green-600 transition-colors">
+            <Link href="/Browse-products" className="text-sm text-gray-600 hover:text-green-600 transition-colors">
               Shop
             </Link>
             <Link href="/user/all-orders" className="text-sm font-medium text-green-600">

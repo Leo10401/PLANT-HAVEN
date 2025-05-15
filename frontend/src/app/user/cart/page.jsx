@@ -191,9 +191,12 @@ export default function CartPage() {
             <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full">
               <img src="/qkartlogo.png" alt="" height={64} width={40} />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 text-transparent bg-clip-text">
-              Qkart
-            </span>
+              <div className="flex flex-col">
+
+                <span className="text-lg sm:text-4xl font-bold text-green-600">Qkart</span>
+                <span className="text-[10px]">Tiny Hands, Green Lands</span>
+              </div>
+            
           </Link>
 
           <div className="flex items-center gap-4">
